@@ -2,7 +2,7 @@
 
 A device that tells bedtime stories to kids
 
-![fably](https://github.com/stefanmaz/fably/blob/main/images/fably.webp?raw=true)
+![fably](https://raw.githubusercontent.com/stefanom/fably/main/images/fably.webp)
 
 
 # Hardware
