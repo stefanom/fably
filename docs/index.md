@@ -20,7 +20,7 @@ Judge for yourself!
 This is the first paragraph of a story generated with GPT-3.5-turbo and the TTS-1 model (the cheapest option):
 
 <audio controls>
-  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_cheap/a_cat_and_a_dog/paragraph_0.mp3" type="audio/mpeg">
+  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_cheap/a_bull/paragraph_0.mp3" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 
