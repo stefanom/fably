@@ -1,0 +1,8 @@
+query: Tell me a story about a cat and a dog.
+language: en
+sst_model: whisper-1
+llm_model: gpt-3.5-turbo
+llm_temperature: 0
+llm_max_tokens: 1600
+tts_model: tts-1
+tts_voice: nova

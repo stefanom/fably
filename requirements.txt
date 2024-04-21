@@ -3,4 +3,4 @@ soundfile
 scipy
 openai
 python-dotenv
-pybluez
+pyyaml

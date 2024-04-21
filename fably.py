@@ -16,6 +16,7 @@ import numpy as np
 import openai
 import sounddevice as sd
 import soundfile as sf
+import yaml
 
 from dotenv import load_dotenv
 
@@ -55,6 +56,18 @@ def write_to_file(path, text):
     """
     with open(path, "w", encoding="utf8") as f:
         f.write(text)
+
+
+def write_to_yaml(path, data):
+    """
+    Write data to a YAML file at the given path.
+
+    Parameters:
+        path (str): The path to the YAML file to write to.
+        data (dict): The data to write to the file.
+    """
+    with open(path, 'w', encoding='utf-8') as file:
+        yaml.dump(data, file, default_flow_style=False)
 
 
 def rms(data):
@@ -110,13 +123,12 @@ def record_until_silence():
     with sd.InputStream(
         callback=callback, samplerate=SAMPLE_RATE, channels=1
     ) as stream:
-        logging.debug(
-            "Listening for sound... Recording will start after detecting sound and stop after 2 seconds of silence."
-        )
+        logging.info("Listening... ")
         while True:
             sd.sleep(100)
             if query_obtained:
                 stream.stop()
+                logging.info("... got it!")
                 break
 
     voice_query = np.concatenate(recorded_frames, axis=0)
@@ -162,7 +174,7 @@ def transcribe(audio_data_floats):
     return response.text
 
 
-def generate_story(query, prompt="", max_tokens=1600, temperature=1):
+def generate_story(query, prompt=""):
     """
     Generates a story stream based on a given query and prompt using the OpenAI API.
 
@@ -184,11 +196,8 @@ def generate_story(query, prompt="", max_tokens=1600, temperature=1):
             {"role": "system", "content": prompt},
             {"role": "user", "content": query},
         ],
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
+        temperature=TEMPERATURE,
+        max_tokens=MAX_TOKENS,
     )
 
 
@@ -235,6 +244,7 @@ async def writer(queue, query=None):
     if not query:
         voice_query = record_until_silence()
         query = transcribe(voice_query)
+        logging.info("Voice query: %s", query)
 
     logging.debug("Transcription of voice query: %s", query)
 
@@ -251,11 +261,23 @@ async def writer(queue, query=None):
     ):
         logging.debug("Creating story folder at %s", story_path)
         story_path.mkdir(parents=True, exist_ok=True)
-        logging.debug("Writing query to disk...")
-        write_to_file(story_path / "query.txt", query)
+
+        logging.debug("Writing model info to disk...")
+        info = {
+            'query': query,
+            'language': LANGUAGE,
+            'stt_model': STT_MODEL,
+            'llm_model': LLM_MODEL,
+            'llm_temperature': TEMPERATURE,
+            'llm_max_tokens': MAX_TOKENS,
+            'tts_model': TTS_MODEL,
+            'tts_voice': TTS_VOICE,
+        }
+        write_to_yaml(story_path / "info.yaml", info)
 
         logging.debug("Reading prompt...")
         prompt = Path("prompt.txt").read_text(encoding="utf8")
+
         logging.debug("Creating story...")
         story_stream = await generate_story(query, prompt)
 
@@ -273,7 +295,7 @@ async def writer(queue, query=None):
 
             if fragment.endswith("\n\n"):
                 paragraph_str = "".join(paragraph)
-                logging.debug("Paragraph %i: %s", index, paragraph_str)
+                logging.info("Paragraph %i: %s", index, paragraph_str)
                 write_to_file(story_path / f"paragraph_{index}.txt", paragraph_str)
                 task = asyncio.create_task(
                     synthesize_audio(story_path, index, paragraph_str)
@@ -358,6 +380,18 @@ async def async_main(query):
     help='The LLM model to use when generating stories. Defaults to "gpt-3.5-turbo".',
 )
 @click.option(
+    "--temperature",
+    type=float,
+    default=1.0,
+    help='The temperature to use when generating stories. Defaults to 1.0.',
+)
+@click.option(
+    "--max-tokens",
+    type=int,
+    default=1600,
+    help='The maximum number of tokens to use when generating stories. Defaults to 1600.',
+)
+@click.option(
     "--tts-model",
     default="tts-1",
     help='The TTS model to use when generating stories. Defaults to "tts-1".',
@@ -385,7 +419,7 @@ async def async_main(query):
 @click.option(
     "--query-guard",
     default="tell me a story about",
-    help='The text each query has to start with. Defaults to "tell me a story about".',
+    help='The text each query has to start with. Defaults to "Tell me a story about".',
 )
 @click.option("--debug", is_flag=True, default=False, help="Enables debug logging.")
 @click.option(
@@ -404,6 +438,8 @@ def main(
     stories_home,
     stt_model,
     llm_model,
+    temperature,
+    max_tokens,
     tts_model,
     tts_voice,
     tts_format,
@@ -414,7 +450,7 @@ def main(
     ignore_cache,
 ):
     # pylint: disable=global-variable-undefined
-    global SILENCE_THRESHOLD, SILENCE_DURATION_SEC, SAMPLE_RATE, QUERY_FILE, STORIES_HOME, STT_MODEL, LLM_MODEL, TTS_MODEL, TTS_VOICE, TTS_FORMAT, LANGUAGE, MAX_FILE_LENGTH, QUERY_GUARD, IGNORE_CACHE, DEBUG
+    global SILENCE_THRESHOLD, SILENCE_DURATION_SEC, SAMPLE_RATE, QUERY_FILE, STORIES_HOME, STT_MODEL, LLM_MODEL, TEMPERATURE, MAX_TOKENS, TTS_MODEL, TTS_VOICE, TTS_FORMAT, LANGUAGE, MAX_FILE_LENGTH, QUERY_GUARD, IGNORE_CACHE, DEBUG
 
     SILENCE_THRESHOLD = silence_threshold
     SILENCE_DURATION_SEC = silence_duration_sec
@@ -423,6 +459,8 @@ def main(
     STT_MODEL = stt_model
     LLM_MODEL = llm_model
     TTS_MODEL = tts_model
+    TEMPERATURE = temperature
+    MAX_TOKENS = max_tokens
     TTS_VOICE = tts_voice
     TTS_FORMAT = tts_format
     LANGUAGE = language
@@ -434,6 +472,8 @@ def main(
 
     if DEBUG:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     asyncio.run(async_main(query))
 
