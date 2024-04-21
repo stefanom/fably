@@ -24,7 +24,8 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
-openai_client = openai.AsyncClient()
+openai_sync_client = openai.Client()
+openai_async_client = openai.AsyncClient()
 
 
 def query_to_filename(query):
@@ -165,7 +166,7 @@ def transcribe(audio_data_floats):
     logging.debug("Sending voice query for transcription...")
 
     with open(QUERY_FILE, "rb") as query:
-        response = openai.OpenAI().audio.transcriptions.create(
+        response = openai_sync_client.audio.transcriptions.create(
             model=STT_MODEL, language=LANGUAGE, file=query
         )
 
@@ -189,7 +190,7 @@ def generate_story(query, prompt=""):
         openai.api_resources.completion.Completion: The generated story stream.
     """
 
-    return openai.AsyncOpenAI().chat.completions.create(
+    return openai_async_client.chat.completions.create(
         stream=True,
         model=LLM_MODEL,
         messages=[
@@ -216,7 +217,7 @@ async def synthesize_audio(story_path, index, text=None):
         logging.debug("Paragraph %i audio already exists at %s", index, audio_file_path)
         return index, audio_file_path
 
-    response = await openai_client.audio.speech.create(
+    response = await openai_async_client.audio.speech.create(
         input=text, model=TTS_MODEL, voice=TTS_VOICE, response_format=TTS_FORMAT
     )
 
