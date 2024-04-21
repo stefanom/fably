@@ -59,6 +59,19 @@ def write_to_file(path, text):
         f.write(text)
 
 
+def read_from_file(path):
+    """
+    Read the contents of a file at the given path and return the text.
+
+    Parameters:
+        path (str): The path to the file to read from.
+
+    Returns:
+        str: The contents of the file at the given path.
+    """
+    return Path(path).read_text(encoding="utf8")
+
+
 def write_to_yaml(path, data):
     """
     Write data to a YAML file at the given path.
@@ -217,6 +230,11 @@ async def synthesize_audio(story_path, index, text=None):
         logging.debug("Paragraph %i audio already exists at %s", index, audio_file_path)
         return index, audio_file_path
 
+    if not text:
+        text_file_path = story_path / f"paragraph_{index}.txt"
+        if text_file_path.exists():
+            text = read_from_file(text_file_path)
+
     response = await openai_async_client.audio.speech.create(
         input=text, model=TTS_MODEL, voice=TTS_VOICE, response_format=TTS_FORMAT
     )
@@ -328,10 +346,8 @@ async def reader(queue):
         index, audio_file = await task
 
         logging.debug("Playing paragraph %i audio from %s", index, audio_file)
-        data, fs = sf.read(
-            audio_file
-        )  # data is the audio array, fs is the sampling frequency
-        sd.play(data, fs)
+        audio_data, sampling_frequency = sf.read(audio_file)
+        sd.play(audio_data, sampling_frequency)
         sd.wait()
         logging.debug("Done playing paragraph %i audio", index)
 
