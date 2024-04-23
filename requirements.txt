@@ -4,3 +4,4 @@ scipy
 openai
 python-dotenv
 pyyaml
+pydub
