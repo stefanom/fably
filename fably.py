@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import wave
+import sys
 
 from pathlib import Path
 
@@ -80,7 +81,7 @@ def write_to_yaml(path, data):
         path (str): The path to the YAML file to write to.
         data (dict): The data to write to the file.
     """
-    with open(path, 'w', encoding='utf-8') as file:
+    with open(path, "w", encoding="utf-8") as file:
         yaml.dump(data, file, default_flow_style=False)
 
 
@@ -215,6 +216,42 @@ def generate_story(query, prompt=""):
     )
 
 
+def persist_runtime_params(story_path, query):
+    """
+    Writes information about the models used to generate the story to a file.
+
+    Args:
+        story_path (pathlib.Path): The path where to save the file.
+        query (str): The query that was used to generate the story.
+    """
+    logging.debug("Writing model info to disk...")
+    info = {
+        "query": query,
+        "language": LANGUAGE,
+        "stt_model": STT_MODEL,
+        "llm_model": LLM_MODEL,
+        "llm_temperature": TEMPERATURE,
+        "llm_max_tokens": MAX_TOKENS,
+        "tts_model": TTS_MODEL,
+        "tts_voice": TTS_VOICE,
+    }
+    write_to_yaml(story_path / "info.yaml", info)
+
+
+async def play(audio_file):
+    """
+    Plays a TTS audio file.
+
+    Args:
+        audio_file (Path): The path to the audio file.
+    """
+    logging.debug("Playing audio from %s", audio_file)
+    audio_data, sampling_frequency = sf.read(audio_file)
+    sd.play(audio_data, sampling_frequency)
+    sd.wait()
+    logging.debug("Done playing %s", audio_file)
+
+
 async def synthesize_audio(story_path, index, text=None):
     """
     Fetches TTS audio for a given paragraph of a story and saves it to a file.
@@ -224,16 +261,21 @@ async def synthesize_audio(story_path, index, text=None):
         index (int): The index of the paragraph within the story.
         text (str): The text to synthesize.
     """
+    logging.debug("Synthesizing audio for paragraph %i...", index)
+
     audio_file_path = story_path / f"paragraph_{index}.{TTS_FORMAT}"
 
     if audio_file_path.exists():
         logging.debug("Paragraph %i audio already exists at %s", index, audio_file_path)
-        return index, audio_file_path
+        return audio_file_path
 
     if not text:
         text_file_path = story_path / f"paragraph_{index}.txt"
         if text_file_path.exists():
+            logging.debug("Reading paragraph %i text from %s ...", index, text_file_path)
             text = read_from_file(text_file_path)
+        else:
+            raise ValueError(f"No text found for paragraph {index} in {story_path}")
 
     response = await openai_async_client.audio.speech.create(
         input=text, model=TTS_MODEL, voice=TTS_VOICE, response_format=TTS_FORMAT
@@ -243,22 +285,19 @@ async def synthesize_audio(story_path, index, text=None):
     response.write_to_file(audio_file_path)
     logging.debug("Paragraph %i audio saved at %s", index, audio_file_path)
 
-    return index, audio_file_path
+    return audio_file_path
 
 
-async def writer(queue, query=None):
-    """Creates a story based on a voice query.
+async def writer(story_queue, query=None):
+    """
+    Creates a story based on a voice query.
 
     If a textual query is given, it is used. If not, it records sound until silence,
     then transcribes the voice query.
 
     Then it uses a large generative language model to create a story based on the query,
-    and sends each paragraph of the story to a TTS service to have them synthesized
-    and saved into audio.
-
-    The story is saved to a directory in the "stories" directory with a different folder
-    for each story. If the story already exists, it will be read from disk and the
-    audio segments will be played back without regenerating the story.
+    processes the returned content as a stream, chunks it into paragraphs and appends them
+    to the queue for downstream processing.
     """
     if not query:
         voice_query = record_until_silence()
@@ -271,7 +310,7 @@ async def writer(queue, query=None):
         print(
             f"Sorry, I can only run queries that start with '{QUERY_GUARD}' and '{query}' does not"
         )
-        await queue.put(None)  # Indicate that we're done
+        await story_queue.put(None)  # Indicates that we're done
         return
 
     story_path = STORIES_HOME / query_to_filename(query)
@@ -281,21 +320,10 @@ async def writer(queue, query=None):
         logging.debug("Creating story folder at %s", story_path)
         story_path.mkdir(parents=True, exist_ok=True)
 
-        logging.debug("Writing model info to disk...")
-        info = {
-            'query': query,
-            'language': LANGUAGE,
-            'stt_model': STT_MODEL,
-            'llm_model': LLM_MODEL,
-            'llm_temperature': TEMPERATURE,
-            'llm_max_tokens': MAX_TOKENS,
-            'tts_model': TTS_MODEL,
-            'tts_voice': TTS_VOICE,
-        }
-        write_to_yaml(story_path / "info.yaml", info)
+        persist_runtime_params(story_path, query)
 
         logging.debug("Reading prompt...")
-        prompt = Path("prompt.txt").read_text(encoding="utf8")
+        prompt = read_from_file("prompt.txt")
 
         logging.debug("Creating story...")
         story_stream = await generate_story(query, prompt)
@@ -303,10 +331,9 @@ async def writer(queue, query=None):
         index = 0
         paragraph = []
 
-        logging.debug("Iterating over the story stream...")
+        logging.debug("Iterating over the story stream to capture paragraphs...")
         async for chunk in story_stream:
             fragment = chunk.choices[0].delta.content
-
             if fragment is None:
                 break
 
@@ -316,10 +343,7 @@ async def writer(queue, query=None):
                 paragraph_str = "".join(paragraph)
                 logging.info("Paragraph %i: %s", index, paragraph_str)
                 write_to_file(story_path / f"paragraph_{index}.txt", paragraph_str)
-                task = asyncio.create_task(
-                    synthesize_audio(story_path, index, paragraph_str)
-                )
-                await queue.put(task)
+                await story_queue.put((story_path, index, paragraph_str))
                 index += 1
                 paragraph = []
 
@@ -327,36 +351,50 @@ async def writer(queue, query=None):
     else:
         logging.debug("Reading cached story at %s", story_path)
         for index in range(len(list(story_path.glob("paragraph_*.txt")))):
-            logging.debug("Creating reading task for paragraph %i", index)
-            task = asyncio.create_task(synthesize_audio(story_path, index))
-            await queue.put(task)
+            await story_queue.put((story_path, index, None))
 
     logging.debug("Done processing the story.")
-    await queue.put(None)
+    await story_queue.put(None)  # Indicates that we're done
 
 
-async def reader(queue):
-    """Reads audio segments from a queue and plays them back."""
+async def reader(story_queue, reading_queue):
+    """
+    Processes the queue of paragraphs and sends them off to be read
+    and synthezized into audio files to be read by the speaker.
+    """
     while True:
-        task = await queue.get()
-        if task is None:
-            logging.debug("Got a none task, done reading the story.")
+        item = await story_queue.get()
+        if item is None:
+            logging.debug("Done reading the story.")
+            await reading_queue.put(None)
             break
-        logging.debug("Obtained task %s", task)
-        index, audio_file = await task
 
-        logging.debug("Playing paragraph %i audio from %s", index, audio_file)
-        audio_data, sampling_frequency = sf.read(audio_file)
-        sd.play(audio_data, sampling_frequency)
-        sd.wait()
-        logging.debug("Done playing paragraph %i audio", index)
+        story_path, index, paragraph = item
+
+        audio_file = await synthesize_audio(story_path, index, paragraph)
+        await reading_queue.put(audio_file)
+
+
+async def speaker(reading_queue):
+    """Processes the queue of audio files and plays them."""
+    while True:
+        audio_file = await reading_queue.get()
+        if audio_file is None:
+            logging.debug("Done playing the story.")
+            break
+
+        await play(audio_file)
 
 
 async def async_main(query):
-    queue = asyncio.Queue()
-    producer = asyncio.create_task(writer(queue, query))
-    consumer = asyncio.create_task(reader(queue))
-    await asyncio.gather(producer, consumer)
+    story_queue = asyncio.Queue()
+    reading_queue = asyncio.Queue()
+
+    writer_task = asyncio.create_task(writer(story_queue, query))
+    reader_task = asyncio.create_task(reader(story_queue, reading_queue))
+    speaker_task = asyncio.create_task(speaker(reading_queue))
+
+    await asyncio.gather(writer_task, reader_task, speaker_task)
 
 
 @click.command()
@@ -400,13 +438,13 @@ async def async_main(query):
     "--temperature",
     type=float,
     default=1.0,
-    help='The temperature to use when generating stories. Defaults to 1.0.',
+    help="The temperature to use when generating stories. Defaults to 1.0.",
 )
 @click.option(
     "--max-tokens",
     type=int,
     default=1600,
-    help='The maximum number of tokens to use when generating stories. Defaults to 1600.',
+    help="The maximum number of tokens to use when generating stories. Defaults to 1600.",
 )
 @click.option(
     "--tts-model",
@@ -497,4 +535,7 @@ def main(
 
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit('\nInterrupted by user')
