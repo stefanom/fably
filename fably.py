@@ -4,6 +4,7 @@ Fably uses generative AI cloud APIS to tell stories.
 """
 
 import asyncio
+import concurrent.futures
 import logging
 import os
 import re
@@ -238,20 +239,6 @@ def persist_runtime_params(story_path, query):
     write_to_yaml(story_path / "info.yaml", info)
 
 
-async def play(audio_file):
-    """
-    Plays a TTS audio file.
-
-    Args:
-        audio_file (Path): The path to the audio file.
-    """
-    logging.debug("Playing audio from %s", audio_file)
-    audio_data, sampling_frequency = sf.read(audio_file)
-    sd.play(audio_data, sampling_frequency)
-    sd.wait()
-    logging.debug("Done playing %s", audio_file)
-
-
 async def synthesize_audio(story_path, index, text=None):
     """
     Fetches TTS audio for a given paragraph of a story and saves it to a file.
@@ -377,13 +364,22 @@ async def reader(story_queue, reading_queue):
 
 async def speaker(reading_queue):
     """Processes the queue of audio files and plays them."""
-    while True:
-        audio_file = await reading_queue.get()
-        if audio_file is None:
-            logging.debug("Done playing the story.")
-            break
+    loop = asyncio.get_running_loop()
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        while True:
+            audio_file = await reading_queue.get()
+            if audio_file is None:
+                logging.debug("Done playing the story.")
+                break
 
-        await play(audio_file)
+            def speak():
+                logging.debug("Playing audio from %s", audio_file)
+                audio_data, sampling_frequency = sf.read(audio_file)
+                sd.play(audio_data, sampling_frequency)
+                sd.wait()
+                logging.debug("Done playing %s", audio_file)
+
+            await loop.run_in_executor(pool, speak)
 
 
 async def async_main(query):
