@@ -17,17 +17,31 @@ For now, we only support OpenAI cloud APIs but we wish to support as many option
 
 Judge for yourself!
 
-This is the first paragraph of a story generated with GPT-3.5-turbo and the TTS-1 model (the cheapest option):
+This is the combined audio generated with GPT-3.5-turbo and the TTS-1 model (the cheapest option) for "Tell me a story about a bull":
 
 <audio controls>
-  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_cheap/a_bull/paragraph_0.mp3" type="audio/mpeg">
+  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_cheap/a_bull/story.mp3" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 
-while this is the first paragraph of a story generated with GPT-4 and the TTS-1-HD model (about 3x more expensive per story):
+and for "tell me a story about a space spider"
 
 <audio controls>
-  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_expensive/a_princess_and_a_frog/paragraph_0.mp3" type="audio/mpeg">
+  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_cheap/a_space_spider/story.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+while this is the combined audio of a story generated with GPT-4 and the TTS-1-HD model (about 3x more expensive per story) for "Tell me a story about a princess and a frog":
+
+<audio controls>
+  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_expensive/a_princess_and_a_frog/story.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+and for "Tell me a story about a planet invated by aliens"
+
+<audio controls>
+  <source src="https://github.com/stefanom/fably/raw/main/examples/openai_expensive/a_planet_invaded_by_aliens/story.mp3" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 
