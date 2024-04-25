@@ -107,6 +107,44 @@ and make sure Fably works as intended
 .python/bin/python fably.py --help
 ```
 
+### Step 4 - Install drivers for the [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
+
+First we download the source code for the HAT drivers
+
+```bash
+git clone https://github.com/HinTak/seeed-voicecard
+cd seeed-voicecard
+```
+
+then we look at what version of the Linux kernel we're running
+
+```bash
+uname -r
+```
+
+and select the appropriate branch and install the drivers
+
+```bash
+git branch v6.6
+sudo ./install.sh
+sudo reboot
+```
+
+Then log back into the rpi after it reboots and then type
+
+```bash
+arecord -l
+```
+
+and we should see something like this
+
+```txt
+**** List of CAPTURE Hardware Devices ****
+card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hifi wm8960-hifi-0 [fe203000.i2s-wm8960-hifi wm8960-hifi-0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+```
+
 ... more later ...
 
 ## Technical Details

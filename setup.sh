@@ -2,7 +2,7 @@
 
 sudo apt update
 sudo apt upgrade -y
-sudo apt install python3-pip libportaudio2 libsndfile1 libbluetooth-dev -y
+sudo apt install python3-venv python3-pip libportaudio2 libsndfile1 libbluetooth-dev alsa-utils -y
 
 if [ ! -d .python ]; then
     python -m venv .python
