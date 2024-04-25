@@ -104,7 +104,7 @@ echo <your_api_key> >> .env
 and make sure Fably works as intended
 
 ```bash
-.python/python fably.py --help
+.python/bin/python fably.py --help
 ```
 
 ... more later ...
