@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Show a text-mode spectrogram using live microphone data."""
 
 import argparse
