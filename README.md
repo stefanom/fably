@@ -88,7 +88,7 @@ Once you are able to ssh into the device, you're ready for the next step.
 Log into the rPI via SSH and type
 
 ```bash
-sudo apt install git
+sudo apt install git -y
 git clone https://github.com/stefanom/fably
 cd fably
 ./setup.sh

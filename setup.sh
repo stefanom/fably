@@ -8,5 +8,5 @@ if [ ! -d .python ]; then
     python -m venv .python
 fi
 
-.python/pip install -r requirements.txt
-.python/pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+.python/bin/pip install -r requirements.txt
+.python/bin/pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
