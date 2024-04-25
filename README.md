@@ -85,18 +85,27 @@ Once you are able to ssh into the device, you're ready for the next step.
 
 ### Step 2 - Install Fably into the rPI
 
-ssh into the rPI and type
+Log into the rPI via SSH and type
 
 ```bash
+sudo apt install git
 git clone https://github.com/stefanom/fably
 cd fably
-pip install -r requirements.txt
-pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+./setup.sh
 ```
 
-### Step 3 - Configure the rPI
+### Step 3 - Configure OpenAPI api key
 
-We want this little machine to be as low maintenance as possible but this also means that it needs to be smart enough to update itself and do all those nice things.
+```bash
+cp env.example .env
+echo <your_api_key> >> .env
+```
+
+and make sure Fably works as intended
+
+```bash
+.python/python fably.py --help
+```
 
 ... more later ...
 

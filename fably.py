@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Fably uses generative AI cloud APIS to tell stories.
 """
