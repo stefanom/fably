@@ -2,11 +2,11 @@
 
 sudo apt update
 sudo apt upgrade -y
-sudo apt install python3-venv python3-pip libportaudio2 libsndfile1 libbluetooth-dev alsa-utils -y
+sudo apt install python3-venv python3-pip libportaudio2 libsndfile1 libbluetooth-dev alsa-utils bluez bluez-tools ffmpeg espeak -y
 
 if [ ! -d .python ]; then
-    python -m venv .python
+    python -m venv .venv
 fi
 
-.python/bin/pip install -r requirements.txt
-.python/bin/pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+source .venv/bin/activate
+pip install -r requirements.txt

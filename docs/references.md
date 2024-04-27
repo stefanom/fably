@@ -3,7 +3,7 @@
 * Hardware
   * Raspberry PI
     * [Raspberry PI Zero W2](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)
-    * [reSpeaker 2 mic HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) ([buy](https://www.aliexpress.us/item/2251832715986197.html))
+    * [reSpeaker 2 mic HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) ([buy](https://www.aliexpress.us/item/2251832715986197.html)) ([forum](https://forum.seeedstudio.com/c/products/respeaker/15))
     * [Printable enclosure](https://www.printables.com/model/761988-voice-assistant-rpi-zero-2w-respeaker-2mic)
   * ESP32
     * [ESP32-box-3](https://www.espressif.com/en/news/ESP32-S3-BOX-3) ([buy](https://www.aliexpress.us/item/3256805733893224.html))
