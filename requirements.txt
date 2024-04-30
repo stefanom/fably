@@ -1,7 +1,8 @@
+apa102
 click
+openai
+pyyaml
+python-dotenv
+pydub
 sounddevice
 soundfile
-openai
-python-dotenv
-pyyaml
-pydub

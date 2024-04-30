@@ -1,11 +1,12 @@
 [Unit]
-Description=Start Fably
+Description=Fably
+After=network.target seeed-voicecard.service
 Wants=seeed-voicecard.service
-ConditionUser=!root
 
 [Service]
 Type=simple
 ExecStart=/home/fably/fably/startup/start.sh
+Restart=on-abort
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
