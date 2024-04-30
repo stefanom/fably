@@ -74,3 +74,7 @@ Giving unsupervised AI to children does feels dangerous and scary but Fably does
 Before installing on an edge device, we recommend to try to run it on a regular personal computer first. It's a lot easier to get it to work there and we can test it and make sure that it meets our needs and expectations.
 
 Follow the instructions [here](https://github.com/stefanom/fably)
+
+## References
+
+Here's a list of [interesting pointers and other projects](references.md) that Fably depends or may depend on in the future.

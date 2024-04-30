@@ -2,9 +2,8 @@
 
 * Hardware
   * Raspberry PI
-    * [Raspberry PI Zero W2](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)
-    * [reSpeaker 2 mic HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) ([buy](https://www.aliexpress.us/item/2251832715986197.html)) ([forum](https://forum.seeedstudio.com/c/products/respeaker/15))
-    * [Printable enclosure](https://www.printables.com/model/761988-voice-assistant-rpi-zero-2w-respeaker-2mic)
+    * [Raspberry PI Zero W2](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) ([OS download](https://www.raspberrypi.com/software/operating-systems/))
+    * [reSpeaker 2 mic HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) ([buy](https://www.aliexpress.us/item/2251832715986197.html), [forum](https://forum.seeedstudio.com/c/products/respeaker/15), [drivers](https://github.com/HinTak/seeed-voicecard))
   * ESP32
     * [ESP32-box-3](https://www.espressif.com/en/news/ESP32-S3-BOX-3) ([buy](https://www.aliexpress.us/item/3256805733893224.html))
     * [ESP32-S3-Korvo-1](https://github.com/espressif/esp-skainet/blob/master/docs/en/hw-reference/esp32s3/user-guide-korvo-1.md) ([buy](https://www.amazon.com/dp/B09MQCHFCL))
@@ -51,3 +50,8 @@
 * Misc
   * [Rhasspy](https://rhasspy.readthedocs.io/en/latest/)
   * [Rhasspy Wyoming Satellite with rPI + reSpeaker](https://github.com/rhasspy/wyoming-satellite/blob/master/docs/tutorial_2mic.md)
+
+* Enclosures
+  * 3D Printing
+    * [SBC Case Builder](https://github.com/hominoids/SBC_Case_Builder)
+    * [Printable enclosure](https://www.printables.com/model/761988-voice-assistant-rpi-zero-2w-respeaker-2mic)

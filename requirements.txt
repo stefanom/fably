@@ -1,7 +1,6 @@
 click
 sounddevice
 soundfile
-scipy
 openai
 python-dotenv
 pyyaml

@@ -1,0 +1,11 @@
+[Unit]
+Description=Start Fably
+Wants=seeed-voicecard.service
+ConditionUser=!root
+
+[Service]
+Type=simple
+ExecStart=/home/fably/fably/startup/start.sh
+
+[Install]
+WantedBy=default.target
