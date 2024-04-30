@@ -18,7 +18,7 @@ aplay /home/fably/fably/sounds/startup.wav
 source /home/fably/fably/.venv/bin/activate
 
 echo "Show the flashing LEDs..."
-python /home/fably/bin/start_leds.py
+python /home/fably/fably/startup/start_leds.py
 
 #echo "Run Fably..."
 #python /home/fably/fably/fably.py

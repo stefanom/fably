@@ -37,21 +37,36 @@ aplay /usr/share/sounds/alsa/Front_Center.wav
 # ----------- Phase 3 -------------
 
 # Install the stuff we need for Fably
-sudo apt install libportaudio2 libsndfile1 python3-venv python3-pip python3-scipy -y
+sudo apt install --yes \
+    libportaudio2 \
+    libsndfile1 \
+    python3-venv \
+    python3-pip \
+    python3-scipy \
+    python3-numpy \
+    python3-soundfile \
+    python3-pydub \
+    python3-click \
+    python3-dotenv \
+    python3-yaml \
+    python3-pyaudio \
+    python3-rpi.gpio
+
+
+# Create a python user environment
+python -m venv --system-site-packages .venv
+source .venv/bin/activate
 
 # Clone Fably's source code
 git clone https://github.com/stefanom/fably
 cd fably
 
-# Create a python environment
-python -m venv .venv
-source .venv/bin/activate
+# Install python dependencies
 pip install -r requirements.txt
 
 # Make Fably start automatically with the system
 chmod +x ./startup/start.sh
 sudo cp ./install/rpi/fably.service /etc/systemd/system/fably.service
-sudo systemctl daemon-reload
 sudo systemctl enable fably.service
 
 # Personalize the shell startup message
