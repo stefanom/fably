@@ -15,7 +15,7 @@ echo "Sound card is available"
 echo "Play the startup sounds..."
 aplay /home/fably/fably/sounds/startup.wav
 
-source /home/fably/fably/.venv/bin/activate
+source /home/fably/.venv/bin/activate
 
 echo "Show the flashing LEDs..."
 python /home/fably/fably/startup/start_leds.py

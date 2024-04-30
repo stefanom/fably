@@ -7,7 +7,7 @@ BRIGHTNESS = 15
 
 def main():
     my_cycle = colorschemes.TheaterChase(num_led=NUM_LED, pause_value=0.04,
-                                         num_steps_per_cycle=35, num_cycles=5, order='rgb',
+                                         num_steps_per_cycle=35, num_cycles=2, order='rgb',
                                          global_brightness=BRIGHTNESS)
     my_cycle.start()
 
