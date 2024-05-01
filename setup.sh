@@ -50,7 +50,7 @@ sudo apt install --yes \
     python3-dotenv \
     python3-yaml \
     python3-pyaudio \
-    python3-rpi.gpio
+    python3-gpiozero
 
 
 # Create a python user environment
