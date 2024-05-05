@@ -64,6 +64,11 @@ cd fably
 # Install python dependencies
 pip install -r requirements.txt
 
+# Download the Vosk model
+curl -o vosk_model.zip https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+unzip vosk_model.zip -d ./fably/models
+rm vosk_model.zip
+
 # Make Fably start automatically with the system
 chmod +x ./startup/start.sh
 sudo cp ./install/rpi/fably.service /etc/systemd/system/fably.service
@@ -77,3 +82,4 @@ sudo reboot
 
 
 # ----------- Phase 4 -------------
+

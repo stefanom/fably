@@ -17,6 +17,7 @@ rm original_startup.wav
 
 VOICE="nova"
 
-python ../tools/tts.py -voice $VOICE -text "Hi, I'm Fably! I'm your storytelling companion!" hi.wav
-python ../tools/tts.py -voice $VOICE -text "Sorry! I'm afraid I can't do that." sorry.wav
-python ../tools/tts.py -voice $VOICE -text "Hmmm. Something went wrong. Why don't you try again?" error.wav
+python ../tools/tts.py --voice $VOICE "Hi! I'm Fably!" hi_short.wav
+python ../tools/tts.py --voice $VOICE "Hi, I'm Fably! I'm your storytelling companion!" hi.wav
+python ../tools/tts.py --voice $VOICE "Sorry! I'm afraid I can't do that." sorry.wav
+python ../tools/tts.py --voice $VOICE "Hmmm. Something went wrong. Do you want to try again?" wrong.wav

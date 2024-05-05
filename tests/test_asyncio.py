@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Make sure asyncio works as expected."""
+
 import asyncio
 import concurrent.futures
 import time

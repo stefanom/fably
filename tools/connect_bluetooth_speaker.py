@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Connect to a Bluetooth speaker."""
+
 import bluetooth
 
 def find_bluetooth_speakers():

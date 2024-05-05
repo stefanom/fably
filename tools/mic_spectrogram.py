@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Show a text-mode spectrogram using live microphone data."""
 
 import argparse
@@ -68,9 +69,11 @@ for bg, fg in zip(colors, colors[1:]):
         else:
             gradient.append(f'\x1b[{fg};{bg + 10}m{char}')
 
+
 try:
-    print("start")
     samplerate = sd.query_devices(args.device, 'input')['default_samplerate']
+
+    print(f"Listening to device {args.device} with {samplerate}...")
 
     delta_f = (high - low) / (args.columns - 1)
     fftsize = math.ceil(samplerate / delta_f)

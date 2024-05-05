@@ -145,6 +145,26 @@ card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hi
   Subdevice #0: subdevice #0
 ```
 
+## Unattended updates
+
+1. Install `unattended-upgrades` package:
+   ```sh
+    # apt install unattended-upgrades
+   ```
+
+2. Add Raspberry Pi Foundation sources to `unattended-upgrades` config:
+   ```conf
+    # /etc/apt/apt.conf.d/50unattended-upgrades
+    
+    Unattended-Upgrade::Origins-Pattern {
+        ...
+        "origin=Raspbian,codename=${distro_codename},label=Raspbian";
+        "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation";
+    };
+   ```
+
+3. After `unattended-upgrades` logs are produced, you can verify the new sources are picked up for updates in `/var/log/unattended-upgrades/unattended-upgrades.log`.
+
 ... more later ...
 
 ## Technical Details

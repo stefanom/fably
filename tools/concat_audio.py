@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Concatenate audio files in a directory into a single audio file."""
+
 import os
 
 import click
