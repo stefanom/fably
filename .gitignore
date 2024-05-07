@@ -1,6 +1,7 @@
 # stuff we don't want to save in version control
-stories
-models
+fably/stories
+fably/queries
+fably/models
 .vscode
 
 # Byte-compiled / optimized / DLL files

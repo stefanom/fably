@@ -1,3 +1,0 @@
-apa102-pi
-openai
-sounddevice

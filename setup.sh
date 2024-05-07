@@ -44,12 +44,7 @@ sudo apt install --yes \
     python3-pip \
     python3-scipy \
     python3-numpy \
-    python3-soundfile \
     python3-pydub \
-    python3-click \
-    python3-dotenv \
-    python3-yaml \
-    python3-pyaudio \
     python3-gpiozero
 
 
@@ -61,8 +56,8 @@ source .venv/bin/activate
 git clone https://github.com/stefanom/fably
 cd fably
 
-# Install python dependencies
-pip install -r requirements.txt
+# Install the egg but keep it editable
+pip install --editable .
 
 # Download the Vosk model
 curl -o vosk_model.zip https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
