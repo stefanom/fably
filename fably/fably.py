@@ -1,5 +1,5 @@
 """
-Fably uses generative AI cloud APIS to tell stories.
+Main Fably logic.
 """
 
 import asyncio
@@ -7,7 +7,8 @@ import concurrent.futures
 import logging
 import shutil
 
-import fably.utils as utils
+from fably import utils
+
 
 def generate_story(ctx, query, prompt):
     """
@@ -63,7 +64,7 @@ async def synthesize_audio(ctx, story_path, index, text=None):
     return audio_file_path
 
 
-async def writer(ctx, sync_client, story_queue, query=None):
+async def writer(ctx, story_queue, query=None):
     """
     Creates a story based on a voice query.
 
@@ -75,8 +76,12 @@ async def writer(ctx, sync_client, story_queue, query=None):
     to the queue for downstream processing.
     """
     if not query:
-        voice_query, query_local = utils.record_until_silence()
-        query, voice_query_file = utils.transcribe(ctx, voice_query)
+        voice_query, query_sample_rate, query_local = utils.record_until_silence(
+            ctx.recognizer, ctx.trim_first_frame
+        )
+        query, voice_query_file = utils.transcribe(
+            ctx.sync_client, voice_query, ctx.stt_model, ctx.language, query_sample_rate
+        )
         logging.info("Voice query: %s [%s]", query, query_local)
 
     logging.debug("Transcription of voice query: %s", query)
@@ -88,7 +93,9 @@ async def writer(ctx, sync_client, story_queue, query=None):
         await story_queue.put(None)  # Indicates that we're done
         return
 
-    story_path = ctx.stories_home / utils.query_to_filename(query)
+    story_path = ctx.stories_home / utils.query_to_filename(
+        query, prefix=ctx.query_guard
+    )
     if ctx.ignore_cache or (
         not ctx.ignore_cache and not story_path.exists() and not story_path.is_dir()
     ):
@@ -96,7 +103,9 @@ async def writer(ctx, sync_client, story_queue, query=None):
         story_path.mkdir(parents=True, exist_ok=True)
 
         logging.debug("Writing model info to disk...")
-        ctx.persist_runtime_params(story_path / "info.yaml", query=query, query_local=query_local)
+        ctx.persist_runtime_params(
+            story_path / "info.yaml", query=query, query_local=query_local
+        )
 
         logging.debug("Copying the original voice query...")
         shutil.move(voice_query_file, story_path / "voice_query.wav")
@@ -105,7 +114,7 @@ async def writer(ctx, sync_client, story_queue, query=None):
         prompt = utils.read_from_file(ctx.prompt_file)
 
         logging.debug("Creating story...")
-        story_stream = await generate_story(query, prompt)
+        story_stream = await generate_story(ctx, query, prompt)
 
         index = 0
         paragraph = []
@@ -169,7 +178,7 @@ async def speaker(ctx, reading_queue):
                 break
 
             def speak():
-                utils.play_audio_file(ctx, audio_file)
+                utils.play_audio_file(audio_file, ctx.audio_driver)
 
             await loop.run_in_executor(pool, speak)
 
@@ -183,4 +192,3 @@ async def main(ctx, query):
     speaker_task = asyncio.create_task(speaker(ctx, reading_queue))
 
     await asyncio.gather(writer_task, reader_task, speaker_task)
-

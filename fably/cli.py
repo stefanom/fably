@@ -1,48 +1,22 @@
 """
-Command line interface.
+Fably's Command line interface.
 """
 
 import asyncio
 import logging
-import os
 import sys
 
 import click
-import openai
-
-import fably.fably as fably
-import fably.utils as utils
 
 from dotenv import load_dotenv
 
+from fably import fably
+from fably import utils
+from fably.cli_utils import pass_context
+
+
 # Load environment variables from .env file, if available
-load_dotenv(override=True)
-
-
-class Context:
-    def __init__(self):
-        self.debug = False
-
-    def persist_runtime_params(self, output_file, **kwargs):
-        """
-        Writes information about the models used to generate the story to a file.
-        """
-        info = {
-            "language": self.language,
-            "stt_model": self.stt_model,
-            "llm_model": self.llm_model,
-            "llm_temperature": self.temperature,
-            "llm_max_tokens": self.max_tokens,
-            "tts_model": self.tts_model,
-            "tts_voice": self.tts_voice,
-        }
-        for key, value in kwargs.items():
-            info[key] = value
-        utils.write_to_yaml(output_file, info)
-
-
-pass_context = click.make_pass_decorator(Context, ensure=True)
-
+load_dotenv()
 
 
 @click.command()
@@ -54,8 +28,8 @@ pass_context = click.make_pass_decorator(Context, ensure=True)
 )
 @click.option(
     "--sample-rate",
-    default=48000,
-    help="The sample rate to use when generating stories. Defaults to 22050.",
+    default=24000,
+    help="The sample rate to use when generating stories. Defaults to 24000.",
 )
 @click.option(
     "--queries-path",
@@ -135,7 +109,7 @@ pass_context = click.make_pass_decorator(Context, ensure=True)
     "--sound-driver",
     type=click.Choice(["alsa", "sounddevice"], case_sensitive=False),
     default="alsa",
-    help='Which driver to use to emit sound.',
+    help="Which driver to use to emit sound.",
 )
 @click.option(
     "--trim-first-frame",
@@ -193,18 +167,14 @@ def main(
     ctx.stories_path = utils.resolve(stories_path)
     ctx.models_path = utils.resolve(models_path)
 
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-
-    ctx.sync_client = openai.Client(api_key=openai_api_key)
-    ctx.async_client = openai.AsyncClient(api_key=openai_api_key)
+    ctx.sync_client, ctx.async_client = utils.get_openai_clients()
     ctx.recognizer = utils.get_speech_recognizer(ctx.models_path, sound_model)
 
     asyncio.run(fably.main(ctx, query))
 
 
 @click.group()
-@pass_context
-def cli(ctx):
+def cli():
     pass
 
 

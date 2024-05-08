@@ -1,60 +1,83 @@
-import os
-import json
-import queue
+#!/usr/bin/env python3
+"""Script to capture a voice query from the microphone and save it to a file.
 
-import sounddevice as sd
-import soundfile as sf
-import numpy as np
+The script will prompt the user to speak and then record their voice. The
+recording is saved to a file in the current directory. The file name is based
+on the current date and time.
+"""
+import logging
 
-from vosk import Model, KaldiRecognizer
+import click
 
-query_file = "query.wav"
-blocksize = 8000
-samplerate = 16000
+from dotenv import load_dotenv
+from fably import utils
 
 
-def listen_to_query():
-    # Load Vosk model for speech recognition
-    model = Model("vosk-model-small-en-us-0.15")
-    rec = KaldiRecognizer(model, samplerate)
+# Load environment variables from .env file, if available
+load_dotenv()
 
-    # Buffer to hold audio from microphone
-    recognition_queue = queue.Queue()
 
-    query = []
-    recorded_frames = []
+@click.command()
+@click.option(
+    "--stt-model",
+    default="whisper-1",
+    help='The STT model to use when generating stories. Defaults to "whisper-1".',
+)
+@click.option(
+    "--sound-model",
+    default="vosk-model-small-en-us-0.15",
+    help='The model to use to discriminate speech in voice queries. Defaults to "vosk-model-small-en-us-0.15".',
+)
+@click.option(
+    "--language",
+    default="en",
+    help='The language to use when generating stories. Defaults to "en".',
+)
+@click.option(
+    "--sound-driver",
+    type=click.Choice(["alsa", "sounddevice"], case_sensitive=False),
+    default="alsa",
+    help="Which driver to use to emit sound.",
+)
+@click.option(
+    "--trim-first-frame",
+    is_flag=True,
+    default=False,
+    help="Trim the first frame of recorded audio data. Useful if the mic has a click or hiss at the beginning of each recording.",
+)
+@click.option("--debug", is_flag=True, default=False, help="Enables debug logging.")
+def main(stt_model, sound_model, language, sound_driver, trim_first_frame, debug):
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
-    def callback(indata, frames, time, status):
-        """ This function is called for each audio block from the microphone """
-        recognition_queue.put(bytes(indata))
-        recorded_frames.append(bytes(indata))
+    sync_client, _ = utils.get_openai_clients()
+    recognizer = utils.get_speech_recognizer(utils.resolve("models"), sound_model)
 
-    """ Listens to the microphone until silence is detected after speech """
-    with sd.RawInputStream(samplerate=samplerate, blocksize=blocksize, dtype='int16', channels=1, callback=callback):
-        print("Listening...")
+    print("Say something...")
 
-        while True:
-            data = recognition_queue.get()
-            if rec.AcceptWaveform(data):
-                result = json.loads(rec.Result())
-                if result['text']:
-                    query.append(result['text'])
-                    break
+    voice_query, voice_query_sample_rate, query_local = utils.record_until_silence(
+        recognizer, trim_first_frame
+    )
+    query_cloud, voice_query_file = utils.transcribe(
+        sync_client,
+        voice_query,
+        stt_model=stt_model,
+        language=language,
+        sample_rate=voice_query_sample_rate,
+    )
 
-        final_result = json.loads(rec.FinalResult())
-        query.append(final_result['text'])
+    utils.play_audio_file(voice_query_file, sound_driver)
 
-    npframes = [np.frombuffer(frame, dtype=np.int16) for frame in recorded_frames]
-    audio_data = np.concatenate(npframes[1:], axis=0)
-    sf.write(query_file, audio_data, samplerate)
+    print(f"Local transcription: {query_local}")
+    print(f"Cloud transcription: {query_cloud}")
 
-    data, fs = sf.read(query_file, dtype="float32")
-    sd.play(data, fs)
-    sd.wait()
 
-    os.system(f"aplay {query_file}")
+@click.group()
+def cli():
+    pass
 
-    return " ".join(query)
 
-# Example usage: invoke listen_to_query function with a timeout or external trigger
-print(listen_to_query())
+if __name__ == "__main__":
+    cli()

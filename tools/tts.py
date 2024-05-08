@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-
-"""
-Generate a sound file from text.
-"""
+""" Generate a sound file from text. """
 
 import logging
 import os
@@ -12,9 +9,7 @@ import openai
 
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-script_dir = os.path.dirname(os.path.realpath(__file__))
-load_dotenv(os.path.join(script_dir, "../.env"), override=True)
+load_dotenv()
 
 
 @click.command()
@@ -36,7 +31,6 @@ load_dotenv(os.path.join(script_dir, "../.env"), override=True)
     help='The TTS format to use when generating stories. Defaults to "wav".',
 )
 @click.option("--debug", is_flag=True, default=False, help="Enables debug logging.")
-# pylint: disable=too-many-arguments
 def main(
     text,
     output_file,
@@ -54,7 +48,13 @@ def main(
     openai.api_key = os.getenv("OPENAI_API_KEY")
     openai_client = openai.Client()
 
-    logging.debug("Generating audio for '%s' with voice '%s' from model '%s' and format '%s...", text, voice, model, audio_format)
+    logging.debug(
+        "Generating audio for '%s' with voice '%s' from model '%s' and format '%s...",
+        text,
+        voice,
+        model,
+        audio_format,
+    )
     response = openai_client.audio.speech.create(
         input=text, model=model, voice=voice, response_format=audio_format
     )
@@ -63,6 +63,10 @@ def main(
     logging.debug("Audio saved at %s", output_file)
 
 
+@click.group()
+def cli():
+    pass
+
+
 if __name__ == "__main__":
-    # pylint: disable=no-value-for-parameter
-    main()
+    cli()

@@ -12,10 +12,12 @@ setup(
         'sounddevice',
         'soundfile',
         'click',
-        'dotenv',
+        'python-dotenv',
         'pyyaml',
         'vosk',
         'numpy',
+        'pydub',
+        'pybluez',
     ],
     entry_points='''
         [console_scripts]

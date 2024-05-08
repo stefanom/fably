@@ -3,11 +3,13 @@
 
 import bluetooth
 
+
 def find_bluetooth_speakers():
     print("Searching for devices...")
     nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True)
-    speakers = [device for device in nearby_devices if 'Speaker' in device[1]]
+    speakers = [device for device in nearby_devices if "Speaker" in device[1]]
     return speakers
+
 
 def connect_to_speaker(device_address):
     # Establishing a connection to the Bluetooth device
@@ -24,7 +26,7 @@ def connect_to_speaker(device_address):
     name = first_match["name"]
     host = first_match["host"]
 
-    print(f"Connecting to \"{name}\" on {host}")
+    print(f'Connecting to "{name}" on {host}')
 
     # Create the client socket and connect to it
     sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
@@ -35,6 +37,7 @@ def connect_to_speaker(device_address):
     except bluetooth.btcommon.BluetoothError as err:
         print(f"Failed to connect: {err}")
         return False
+
 
 def main():
     speakers = find_bluetooth_speakers()
@@ -49,6 +52,7 @@ def main():
                 break
     else:
         print("No Bluetooth speakers found.")
+
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,7 @@ FORMAT = "mp3"
     type=click.Path(exists=True),
     help="Root folder to start searching for MP3 files.",
 )
-def concat_audio(folder):
+def main(folder):
     # Walk through all directories and subdirectories starting from the root folder
     for root, _, files in os.walk(folder):
         # Prepare the path for the output file
@@ -47,6 +47,10 @@ def concat_audio(folder):
         click.echo(f"Combined audio files saved as {output_path}")
 
 
+@click.group()
+def cli():
+    pass
+
+
 if __name__ == "__main__":
-    # pylint: disable=no-value-for-parameter
-    concat_audio()
+    cli()
