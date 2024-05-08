@@ -38,8 +38,8 @@ def released(ctx):
             print("No sound files found. Record one by long pressing.")
     elif pressed_for < ctx.button.hold_time:
         print("This is a long press. Recording a sound...")
-        utils.play_sound("what_story", ctx.sound_driver)
-        audio_data, sample_rate, _ = utils.record_until_silence(ctx)
+        utils.play_sound("what_story", audio_driver=ctx.sound_driver)
+        audio_data, sample_rate, _ = utils.record_until_silence(ctx.recognizer)
         audio_file = time.strftime("%d_%m_%Y-%H_%M_%S") + "_voice.wav"
         utils.write_audio_data_to_file(audio_data, audio_file, sample_rate)
         print("Finished recording.")
@@ -47,7 +47,7 @@ def released(ctx):
 
 def held(ctx):
     print("This is a hold press. Erasing all recorded sounds")
-    utils.play_sound(ctx, "delete")
+    utils.play_sound("delete", audio_driver=ctx.sound_driver)
     os.system("rm *_voice.wav")
 
 
@@ -83,7 +83,7 @@ def main(ctx, sound_driver):
     print("Press ctrl-c to exit")
 
     try:
-        utils.play_sound(ctx, "hi")
+        utils.play_sound("hi", audio_driver=ctx.sound_driver)
         pause()
     except KeyboardInterrupt:
         print("Program terminated.")
