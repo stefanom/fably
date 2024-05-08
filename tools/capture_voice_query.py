@@ -74,10 +74,5 @@ def main(stt_model, sound_model, language, sound_driver, trim_first_frame, debug
     print(f"Cloud transcription: {query_cloud}")
 
 
-@click.group()
-def cli():
-    pass
-
-
 if __name__ == "__main__":
-    cli()
+    main()

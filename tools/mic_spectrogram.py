@@ -113,10 +113,5 @@ def main(list_devices, block_duration, columns, device, gain, frequency_range):
                     )
 
 
-@click.group()
-def cli():
-    pass
-
-
 if __name__ == "__main__":
-    cli()
+    main()

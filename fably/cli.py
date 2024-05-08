@@ -173,13 +173,8 @@ def main(
     asyncio.run(fably.main(ctx, query))
 
 
-@click.group()
-def cli():
-    pass
-
-
 if __name__ == "__main__":
     try:
-        cli()
+        main()
     except KeyboardInterrupt:
         sys.exit("\nInterrupted by user")

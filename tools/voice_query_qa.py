@@ -89,10 +89,5 @@ def main(ctx, sound_driver):
         print("Program terminated.")
 
 
-@click.group()
-def cli():
-    pass
-
-
 if __name__ == "__main__":
-    cli()
+    main()
