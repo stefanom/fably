@@ -192,6 +192,16 @@ we can also play a sound like this
 aplay /usr/share/sounds/alsa/Front_Center.wav
 ```
 
+### Phase 7 - Make Fably start when the RPI starts
+
+```bash
+sudo cp ./install/rpi/fably.service /etc/systemd/system/fably.service
+sudo systemctl enable fably.service
+sudo reboot
+```
+
+Your RPI should start by speaking to you!
+
 ## Unattended updates
 
 1. Install `unattended-upgrades` package:

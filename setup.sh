@@ -9,35 +9,11 @@ sudo apt update
 sudo apt upgrade -y
 sudo reboot
 
-
 # ----------- Phase 2 -------------
-
-# Download the reSpeaker HAT drivers source code
-sudo apt install git -y
-git config --global init.defaultBranch main
-git clone https://github.com/HinTak/seeed-voicecard
-cd seeed-voicecard
-
-# Move to the right branch for the current kernel version
-uname_r=$(uname -r)
-version=$(echo "$uname_r" | sed 's/\([0-9]*\.[0-9]*\).*/\1/')
-git checkout v$version
-
-# Compilie the drivers to make sure everything works
-make
-
-# If we get no errors, install the drivers then reboot
-sudo ./install.sh
-sudo reboot
-
-# Test the speaker to make sure everything worked
-aplay /usr/share/sounds/alsa/Front_Center.wav
-
-
-# ----------- Phase 3 -------------
 
 # Install the stuff Fably needs
 sudo apt install -y \
+    git \
     mpg123 \
     libportaudio2 \
     libsndfile1 \
@@ -61,8 +37,30 @@ cd fably
 # Install but keep it editable
 pip install --editable .
 
+# ----------- Phase 3 -------------
+
+# Download the reSpeaker HAT drivers source code
+git clone https://github.com/HinTak/seeed-voicecard
+cd seeed-voicecard
+
+# Move to the right branch for the current kernel version
+uname_r=$(uname -r)
+version=$(echo "$uname_r" | sed 's/\([0-9]*\.[0-9]*\).*/\1/')
+git checkout v$version
+
+# Compilie the drivers to make sure everything works
+make
+
+# If we get no errors, install the drivers then reboot
+sudo ./install.sh
+sudo reboot
+
+# Test the speaker to make sure everything worked
+aplay /usr/share/sounds/alsa/Front_Center.wav
+
+# ----------- Phase 4 -------------
+
 # Make Fably start automatically with the system
-chmod +x ./startup/start.sh
 sudo cp ./install/rpi/fably.service /etc/systemd/system/fably.service
 sudo systemctl enable fably.service
 
