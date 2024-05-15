@@ -27,6 +27,7 @@ class Context:
         self.max_tokens = 0
         self.tts_model = None
         self.tts_voice = None
+        self.running = True
 
     def persist_runtime_params(self, output_file, **kwargs):
         """

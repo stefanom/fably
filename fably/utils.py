@@ -9,6 +9,7 @@ import subprocess
 import queue
 import json
 import time
+import colorsys
 
 from pathlib import Path
 
@@ -26,6 +27,44 @@ SOUNDS_PATH = "sounds"
 QUERY_SAMPLE_RATE = 16000
 
 
+def rotate_rgb_color(rgb_value, step_size=1):
+    """
+    Rotate an RGB color by a given step size (in degrees).
+
+    The function takes an RGB value as input (in the format 0xRRGGBB), and
+    returns a new RGB value that is a rotation of the original color by the
+    given step size.
+
+    The step size is expected to be given in degrees. The function will
+    convert the step size to radians and then use it to rotate the color in
+    the HSV color space. The resulting RGB color is then converted back to
+    the RGB color space.
+    """
+
+    # Convert RGB value to normalized RGB components (0.0 to 1.0)
+    r = ((rgb_value >> 16) & 0xFF) / 255.0
+    g = ((rgb_value >> 8) & 0xFF) / 255.0
+    b = (rgb_value & 0xFF) / 255.0
+
+    # Convert RGB to HSV (Hue, Saturation, Value)
+    h, s, v = colorsys.rgb_to_hsv(r, g, b)
+
+    # Rotate the hue component
+    h = (h + (step_size / 360.0)) % 1.0  # Increment hue by step_size (in degrees)
+
+    # Convert HSV back to RGB
+    r_new, g_new, b_new = colorsys.hsv_to_rgb(h, s, v)
+
+    # Convert RGB components (0.0 to 1.0) back to integer RGB value
+    new_rgb_value = (
+        int(r_new * 255) << 16 |
+        int(g_new * 255) << 8 |
+        int(b_new * 255)
+    )
+
+    return new_rgb_value
+
+
 def resolve(path):
     """
     Resolve a path to an absolute path, creating any necessary parent
@@ -38,11 +77,19 @@ def resolve(path):
     exist.
     """
     path = Path(path)
-    absolute_path = (
-        absolute_path if path.is_absolute() else Path(__file__).resolve().parent / path
-    )
-    if absolute_path.is_dir():
+
+    if path.is_absolute():
+        absolute_path = path
+    else:
+        # Resolve relative path relative to the directory of the current file
+        current_file_path = Path(__file__).resolve().parent
+        absolute_path = current_file_path / path
+
+    if not absolute_path.exists():
+        if not os.access(absolute_path.parent, os.W_OK):
+            raise PermissionError(f"Cannot write to directory: {absolute_path.parent}")
         absolute_path.mkdir(parents=True, exist_ok=True)
+
     return absolute_path
 
 
@@ -111,7 +158,10 @@ def play_audio_file(audio_file, audio_driver="alsa"):
         sd.play(audio_data, sampling_frequency)
         sd.wait()
     elif audio_driver == "alsa":
-        os.system(f"aplay {audio_file}")
+        if audio_file.suffix == ".mp3":
+            os.system(f"mpg123 {audio_file}")
+        else:
+            os.system(f"aplay {audio_file}")
     else:
         raise ValueError(f"Unsupported audio driver: {audio_driver}")
     logging.debug("Done playing %s with %s", audio_file, audio_driver)
@@ -125,6 +175,10 @@ def query_to_filename(query, prefix):
     """
     # Remove the query guard part since it doesn't add any information
     query = query.lower().replace(prefix, "", 1).strip()
+
+    # Remove the period at the end if it exists
+    if query.endswith("."):
+        query = query[:-1]
 
     # Replace illegal file name characters with underscores and truncate
     return re.sub(r'[\\/*?:"<>| ]', "_", query)[:MAX_FILE_LENGTH]
@@ -208,14 +262,22 @@ def transcribe(
     stt_model="whisper-1",
     language="en",
     sample_rate=QUERY_SAMPLE_RATE,
-    audio_file=None,
+    audio_path=None,
 ):
     """
     Transcribes the given audio data using the OpenAI API.
     """
 
-    if not audio_file:
-        audio_file = time.strftime("%d_%m_%Y-%H_%M_%S") + ".wav"
+    file_name = time.strftime("%d_%m_%Y-%H_%M_%S") + ".wav"
+
+    if not audio_path:
+        audio_file = file_name
+    else:
+        audio_path = audio_path if isinstance(audio_path, Path) else Path(audio_path)
+        if audio_path.is_dir():
+            audio_file = audio_path / file_name
+        else:
+            audio_file = audio_path
     write_audio_data_to_file(audio_data, audio_file, sample_rate)
 
     logging.debug("Sending voice query for transcription...")

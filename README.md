@@ -19,7 +19,7 @@ type this into your command line
 ```sh
 git clone git@github.com:stefanom/fably.git
 cd fably
-pip install -r requirements.txt
+pip install .
 ```
 
 ### Listening to examples
@@ -27,10 +27,10 @@ pip install -r requirements.txt
 In the `example` folder, there are several examples of generated stories along with the synthetized speech. You can listen to them directly here from github or you can run the following command to run use Fably itself to tell the story already generated
 
 ```sh
-python fably.py --query "Tell me a story about a princess and a frog" --stories-home=./examples/openai_cheap
+fably --query "Tell me a story about a princess and a frog" --stories-home=./examples/openai_cheap
 ```
 
-will play the example from `openai_cheap` which uses GPT-3.5 and TTS-1 as the LLM and TTS model respectively. If you change the above to `openai_expensive`, it will play the example from `openai_expensive` which used GPT-4 and TTS-1-HD instead.
+will play the example from `openai_cheap` which uses GPT-3.5 and TTS-1 as the LLM and TTS model respectively. If you change the above to `openai_expensive`, it will play the example from `openai_expensive` which used GPT-4o and TTS-1-HD instead.
 
 ### Setting up the OpenAI Key
 
@@ -52,17 +52,17 @@ and add your OpenAI key in that file.
 
 ### Creating a story
 
-For this, we'll need to have a microphone available to our computer. Once a microphone is available, run this command to create a story and listen to it:
+For this, we'll need to have a microphone available to our computer. Run this command to have fably listen to your voice query and tell you a story:
 
 ```bash
-python fably.py 
+fably 
 ```
 
-Say out loud "tell me a story about a dog" and ear the magic.
+Press the button on the sound say out loud "tell me a story about a dog" and ear the magic.
 
 ## Troubleshooting
 
-We'll add more content here as we run into issues.
+Coming soon...
 
 ## Installing on a RaspberryPI Zero 2W
 
@@ -73,7 +73,7 @@ We will need:
 * a power supply
 * a bluetooth speaker
 
-### Step 1 - Install Raspian on the rPI
+### Phase 1 - Install Raspian on the rPI
 
 To install the OS we recommend using the official installer located at https://www.raspberrypi.com/software/.
 
@@ -83,31 +83,70 @@ Note that you can press "Ctrl+Shift+X" to open the advanced options that allow y
 
 Once you are able to ssh into the device, you're ready for the next step.
 
-### Step 2 - Install Fably into the rPI
+### Phase 2 - Update the OS installation
 
-Log into the rPI via SSH and type
+Log into the RPI via SSH and type
 
 ```bash
-sudo apt install git -y
-git clone https://github.com/stefanom/fably
-cd fably
-./setup.sh
+sudo apt update
+sudo apt upgrade -y
+sudo reboot
 ```
 
-### Step 3 - Configure OpenAPI api key
+Rebooting is not needed every time but it's safer in case the Linux kernel has been upgraded.
+
+### Phase 3 - Install the stuff that Fably needs
+
+Log into the RPI via SSH and type
+
+```bash
+sudo apt install -y \
+    git \
+    mpg123 \
+    libportaudio2 \
+    libsndfile1 \
+    python3-venv \
+    python3-pip \
+    python3-scipy \
+    python3-numpy \
+    python3-pydub \
+    python3-gpiozero \
+    python3-bluez \
+```
+
+When this is done, create a python environment for Fably
+
+```bash
+python -m venv --system-site-packages .venv
+source .venv/bin/activate
+```
+
+### Phase 4 - Install Fably
+
+Type
+
+```bash
+git clone https://github.com/stefanom/fably
+cd fably
+pip install .
+```
+
+and make sure that Fably works as intended by typing
+
+```bash
+fably --help
+```
+
+### Phase 5 - Configure the OpenAPI api key
 
 ```bash
 cp env.example .env
 echo <your_api_key> >> .env
 ```
 
-and make sure Fably works as intended
+### Phase 6 - Install drivers for the [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
 
-```bash
-.python/bin/python fably.py --help
-```
-
-### Step 4 - Install drivers for the [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
+Skip this section if that's not the sound card that your RPI has.
 
 First we download the source code for the HAT drivers
 
@@ -116,21 +155,23 @@ git clone https://github.com/HinTak/seeed-voicecard
 cd seeed-voicecard
 ```
 
-then we look at what version of the Linux kernel we're running
+then we switch to the git branch of the kernel we're currently using
 
 ```bash
-uname -r
+uname_r=$(uname -r)
+version=$(echo "$uname_r" | sed 's/\([0-9]*\.[0-9]*\).*/\1/')
+git checkout v$version
 ```
 
-and select the appropriate branch and install the drivers
+at this point we're ready to make the driver, install it and reboot
 
 ```bash
-git branch v6.6
+make
 sudo ./install.sh
 sudo reboot
 ```
 
-Then log back into the rpi after it reboots and then type
+Then log back into the RPI after it reboots and then type
 
 ```bash
 arecord -l
@@ -145,11 +186,17 @@ card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hi
   Subdevice #0: subdevice #0
 ```
 
+we can also play a sound like this
+
+```
+aplay /usr/share/sounds/alsa/Front_Center.wav
+```
+
 ## Unattended updates
 
 1. Install `unattended-upgrades` package:
-   ```sh
-    # apt install unattended-upgrades
+   ```bash
+   apt install unattended-upgrades
    ```
 
 2. Add Raspberry Pi Foundation sources to `unattended-upgrades` config:
@@ -164,8 +211,6 @@ card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hi
    ```
 
 3. After `unattended-upgrades` logs are produced, you can verify the new sources are picked up for updates in `/var/log/unattended-upgrades/unattended-upgrades.log`.
-
-... more later ...
 
 ## Technical Details
 
@@ -225,3 +270,17 @@ There are more things we need to consider though:
 * high quality text-to-speech services are computational expensive and OpenAI greatly limits the number of concurrent requests coming from the same organization (3 in one minute, at the time of writing). This means that we can't just fire new TTS requests each time we get a new paragraph: we need to gate the number of concurrent TTS requests in flight.
 
 Luckily for us, high quality TTS audio is generally well enunciated and that takes time to play back. This give us plenty of time to obtain a new paragraph and send it off to the TSS service before the previous one has finished playing. This gives the listener the perception of a quick response and no pauses between paragraphs, even if the components of the audio stream are being assembled in flight behind the scenes.
+
+# Roadmap
+
+## Short term
+
+* make the query guard system more sophisticated
+* look into ways to make the stories more divergent
+
+## Longer term
+
+* get it to work with other RPI sound cards
+* get it to work on ESP32-based boards
+* get it to work with other APIs
+* get it to work with models hosted on the local network

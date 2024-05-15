@@ -36,8 +36,9 @@ aplay /usr/share/sounds/alsa/Front_Center.wav
 
 # ----------- Phase 3 -------------
 
-# Install the stuff we need for Fably
-sudo apt install --yes \
+# Install the stuff Fably needs
+sudo apt install -y \
+    mpg123 \
     libportaudio2 \
     libsndfile1 \
     python3-venv \
@@ -60,12 +61,6 @@ cd fably
 # Install but keep it editable
 pip install --editable .
 
-# Download the Vosk model
-# NOTE: this should be performed automatically but I still need to test that it works as expected
-# curl -o vosk_model.zip https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
-# unzip vosk_model.zip -d ./fably/models
-# rm vosk_model.zip
-
 # Make Fably start automatically with the system
 chmod +x ./startup/start.sh
 sudo cp ./install/rpi/fably.service /etc/systemd/system/fably.service
@@ -76,7 +71,3 @@ sudo cp ./install/rpi/motd /etc/motd
 
 # Reboot and enjoy Fably!
 sudo reboot
-
-
-# ----------- Phase 4 -------------
-

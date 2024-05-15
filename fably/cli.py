@@ -2,7 +2,6 @@
 Fably's Command line interface.
 """
 
-import asyncio
 import logging
 import sys
 
@@ -12,91 +11,118 @@ from dotenv import load_dotenv
 
 from fably import fably
 from fably import utils
+from fably import leds
+
 from fably.cli_utils import pass_context
 
+
+PROMPT_FILE = "./prompt.txt"
+QUERIES_PATH = "./queries"
+STORIES_PATH = "./stories"
+MODELS_PATH = "./models"
+SOUND_MODEL = "vosk-model-small-en-us-0.15"
+SAMPLE_RATE = 24000
+SST_MODEL = "whisper-1"
+#LLM_MODEL = "gpt-4o"
+LLM_MODEL = "gtp-3.5-turbo"
+TEMPERATURE = 1.0
+MAX_TOKENS = 2000
+TTS_MODEL = "tts-1"
+TTS_VOICE = "nova"
+TTS_FORMAT = "mp3"
+LANGUAGE = "en"
+BUTTON_GPIO_PIN = 17
+HOLD_TIME = 3
+SOUND_DRIVER = "alsa"
+QUERY_GUARD = "tell me a story"
+
+#STARTING_COLORS = [0xff0000, 0x00ff00, 0x0000ff]
+STARTING_COLORS = [0xff0000, 0xff0000, 0xff0000]
 
 # Load environment variables from .env file, if available
 load_dotenv()
 
 
+
 @click.command()
-@click.option("--query", default=None, help="The story to tell.")
+@click.argument("query", required=False, default=None, nargs=1)
 @click.option(
     "--prompt-file",
-    default="./prompt.txt",
-    help='The file to use as the prompt when generating stories. Defaults to "./prompt.txt".',
+    default=PROMPT_FILE,
+    help=f'The file to use as the prompt when generating stories. Defaults to "{PROMPT_FILE}".',
 )
 @click.option(
     "--sample-rate",
-    default=24000,
-    help="The sample rate to use when generating stories. Defaults to 24000.",
+    default=SAMPLE_RATE,
+    help=f'The sample rate to use when generating stories. Defaults to {SAMPLE_RATE}.',
 )
 @click.option(
     "--queries-path",
-    default="./queries",
-    help='The directory to store the recorded voice queries in. Defaults to "./queries".',
+    default=QUERIES_PATH,
+    help=f'The directory to store the recorded voice queries in. Defaults to "{QUERIES_PATH}".',
 )
 @click.option(
     "--stories-path",
-    default="./stories",
-    help='The directory to store the generated stories in. Defaults to "./stories".',
+    default=STORIES_PATH,
+    help=f'The directory to store the generated stories in. Defaults to "{STORIES_PATH}".',
 )
 @click.option(
     "--models-path",
-    default="./models",
-    help='The directory to store the downloaded models running locally. Defaults to "./models".',
+    default=MODELS_PATH,
+    help=f'The directory to store the downloaded models running locally. Defaults to "{MODELS_PATH}".',
 )
 @click.option(
     "--sound-model",
-    default="vosk-model-small-en-us-0.15",
-    help='The model to use to discriminate speech in voice queries. Defaults to "vosk-model-small-en-us-0.15".',
+    default=SOUND_MODEL,
+    help=f'The model to use to discriminate speech in voice queries. Defaults to "{SOUND_MODEL}".',
 )
 @click.option(
     "--stt-model",
-    default="whisper-1",
-    help='The STT model to use when generating stories. Defaults to "whisper-1".',
+    default=SST_MODEL,
+    help=f'The STT model to use when generating stories. Defaults to "{SST_MODEL}".',
 )
 @click.option(
     "--llm-model",
-    default="gpt-3.5-turbo",
-    help='The LLM model to use when generating stories. Defaults to "gpt-3.5-turbo".',
+    type=click.Choice(["gpt-3.5-turbo", "gpt-4o"], case_sensitive=False),
+    default=LLM_MODEL,
+    help=f'The LLM model to use when generating stories. Defaults to "{LLM_MODEL}".',
 )
 @click.option(
     "--temperature",
     type=float,
-    default=1.0,
-    help="The temperature to use when generating stories. Defaults to 1.0.",
+    default=TEMPERATURE,
+    help="The temperature to use when generating stories. Defaults to {TEMPERATURE}.",
 )
 @click.option(
     "--max-tokens",
     type=int,
-    default=1600,
-    help="The maximum number of tokens to use when generating stories. Defaults to 1600.",
+    default=MAX_TOKENS,
+    help="The maximum number of tokens to use when generating stories. Defaults to {MAX_TOKENS}.",
 )
 @click.option(
     "--tts-model",
-    default="tts-1",
-    help='The TTS model to use when generating stories. Defaults to "tts-1".',
+    default=TTS_MODEL,
+    help=f'The TTS model to use when generating stories. Defaults to "{TTS_MODEL}".',
 )
 @click.option(
     "--tts-voice",
-    default="nova",
-    help='The TTS voice to use when generating stories. Defaults to "nova".',
+    default=TTS_VOICE,
+    help=f'The TTS voice to use when generating stories. Defaults to "{TTS_VOICE}".',
 )
 @click.option(
     "--tts-format",
-    default="mp3",
-    help='The TTS format to use when generating stories. Defaults to "mp3".',
+    default=TTS_FORMAT,
+    help=f'The TTS format to use when generating stories. Defaults to "{TTS_FORMAT}".',
 )
 @click.option(
     "--language",
-    default="en",
-    help='The language to use when generating stories. Defaults to "en".',
+    default=LANGUAGE,
+    help=f'The language to use when generating stories. Defaults to "{LANGUAGE}".',
 )
 @click.option(
     "--query-guard",
-    default="tell me a story about",
-    help='The text each query has to start with. Defaults to "Tell me a story about".',
+    default=QUERY_GUARD,
+    help=f'The text each query has to start with. Defaults to "{QUERY_GUARD}".',
 )
 @click.option("--debug", is_flag=True, default=False, help="Enables debug logging.")
 @click.option(
@@ -108,7 +134,7 @@ load_dotenv()
 @click.option(
     "--sound-driver",
     type=click.Choice(["alsa", "sounddevice"], case_sensitive=False),
-    default="alsa",
+    default=SOUND_DRIVER,
     help="Which driver to use to emit sound.",
 )
 @click.option(
@@ -117,8 +143,21 @@ load_dotenv()
     default=False,
     help="Trim the first frame of recorded audio data. Useful if the mic has a click or hiss at the beginning of each recording.",
 )
+@click.option(
+    "--button-gpio-pin",
+    type=int,
+    default=BUTTON_GPIO_PIN,
+    help=f"The GPIO pin to use for the button. Defaults to {BUTTON_GPIO_PIN}.",
+)
+@click.option(
+    "--hold-time",
+    type=float,
+    default=HOLD_TIME,
+    help="The time to hold the button to erase all recorded sounds. Defaults to {HOLD_TIME} seconds.",
+)
+@click.option("--loop", is_flag=True, default=False, help="Enables loop operation.")
 @pass_context
-def main(
+def cli(
     ctx,
     query,
     prompt_file,
@@ -140,6 +179,9 @@ def main(
     ignore_cache,
     sound_driver,
     trim_first_frame,
+    button_gpio_pin,
+    hold_time,
+    loop,
 ):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -159,22 +201,30 @@ def main(
     ctx.query_guard = query_guard
     ctx.ignore_cache = ignore_cache
     ctx.debug = debug
+    ctx.loop = loop
     ctx.sound_driver = sound_driver
     ctx.trim_first_frame = trim_first_frame
+    ctx.button_gpio_pin = button_gpio_pin
+    ctx.hold_time = hold_time
 
     ctx.prompt_file = utils.resolve(prompt_file)
     ctx.queries_path = utils.resolve(queries_path)
     ctx.stories_path = utils.resolve(stories_path)
     ctx.models_path = utils.resolve(models_path)
 
-    ctx.sync_client, ctx.async_client = utils.get_openai_clients()
-    ctx.recognizer = utils.get_speech_recognizer(ctx.models_path, sound_model)
+    ctx.leds = leds.LEDs(STARTING_COLORS)
 
-    asyncio.run(fably.main(ctx, query))
+    ctx.running = True
+    ctx.talking = False
+
+    try:
+        fably.main(ctx, query)
+    finally:
+        ctx.leds.stop()
 
 
 if __name__ == "__main__":
     try:
-        main()
+        cli()
     except KeyboardInterrupt:
         sys.exit("\nInterrupted by user")
