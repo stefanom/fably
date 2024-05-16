@@ -56,11 +56,7 @@ def rotate_rgb_color(rgb_value, step_size=1):
     r_new, g_new, b_new = colorsys.hsv_to_rgb(h, s, v)
 
     # Convert RGB components (0.0 to 1.0) back to integer RGB value
-    new_rgb_value = (
-        int(r_new * 255) << 16 |
-        int(g_new * 255) << 8 |
-        int(b_new * 255)
-    )
+    new_rgb_value = int(r_new * 255) << 16 | int(g_new * 255) << 8 | int(b_new * 255)
 
     return new_rgb_value
 

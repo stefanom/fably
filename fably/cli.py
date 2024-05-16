@@ -23,7 +23,7 @@ MODELS_PATH = "./models"
 SOUND_MODEL = "vosk-model-small-en-us-0.15"
 SAMPLE_RATE = 24000
 SST_MODEL = "whisper-1"
-#LLM_MODEL = "gpt-4o"
+# LLM_MODEL = "gpt-4o"
 LLM_MODEL = "gpt-3.5-turbo"
 TEMPERATURE = 1.0
 MAX_TOKENS = 2000
@@ -36,12 +36,11 @@ HOLD_TIME = 3
 SOUND_DRIVER = "alsa"
 QUERY_GUARD = "tell me a story"
 
-#STARTING_COLORS = [0xff0000, 0x00ff00, 0x0000ff]
-STARTING_COLORS = [0xff0000, 0xff0000, 0xff0000]
+# STARTING_COLORS = [0xff0000, 0x00ff00, 0x0000ff]
+STARTING_COLORS = [0xFF0000, 0xFF0000, 0xFF0000]
 
 # Load environment variables from .env file, if available
 load_dotenv()
-
 
 
 @click.command()
@@ -54,7 +53,7 @@ load_dotenv()
 @click.option(
     "--sample-rate",
     default=SAMPLE_RATE,
-    help=f'The sample rate to use when generating stories. Defaults to {SAMPLE_RATE}.',
+    help=f"The sample rate to use when generating stories. Defaults to {SAMPLE_RATE}.",
 )
 @click.option(
     "--queries-path",

@@ -3,8 +3,9 @@
 
 from fably import leds
 
-#STARTING_COLORS = [0xff0000, 0x00ff00, 0x0000ff]
-STARTING_COLORS = [0xff0000, 0xff0000, 0xff0000]
+# STARTING_COLORS = [0xff0000, 0x00ff00, 0x0000ff]
+STARTING_COLORS = [0xFF0000, 0xFF0000, 0xFF0000]
+
 
 def main():
     lights = leds.LEDs(STARTING_COLORS)

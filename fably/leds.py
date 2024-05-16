@@ -1,9 +1,11 @@
 """Code to manage a series of LEDs."""
+
 import time
 import threading
 
 from apa102_pi.driver import apa102
 from fably import utils
+
 
 class LEDs:
     """Class to manage a series of rgb LEDs."""

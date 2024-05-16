@@ -97,7 +97,9 @@ async def writer(ctx, story_queue, query=None):
 
     if not query.lower().startswith(ctx.query_guard):
         logging.warning(
-            "Sorry, I can only run queries that start with '%s' and '%s' does not", ctx.query_guard, query
+            "Sorry, I can only run queries that start with '%s' and '%s' does not",
+            ctx.query_guard,
+            query,
         )
         utils.play_sound("sorry", audio_driver=ctx.sound_driver)
         await story_queue.put(None)  # Indicates that we're done
@@ -217,6 +219,7 @@ def tell_story(ctx, query=None):
     """
     Forks off a thread to tell the story.
     """
+
     def tell_story_wrapper():
         asyncio.run(run_story_loop(ctx, query))
 
@@ -265,7 +268,9 @@ def main(ctx, query=None):
                 tell_story(ctx)
                 logging.debug("Forked the storytelling thread")
             else:
-                logging.debug("This is a short press, but we are already telling a story.")
+                logging.debug(
+                    "This is a short press, but we are already telling a story."
+                )
 
     def held(ctx):
         logging.info("This is a hold press. Shutting down.")
