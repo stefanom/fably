@@ -124,7 +124,7 @@ source .venv/bin/activate
 Type
 
 ```bash
-git clone https://github.com/stefanom/fably
+git clone git@github.com:stefanom/fably.git
 cd fably
 pip install --editable .
 ```
@@ -332,5 +332,5 @@ Luckily for us, high quality TTS audio is generally well enunciated and that tak
 ## Longer term
 
 * get it to work on ESP32-based boards
-* get it to work with other APIs
-* get it to work with models hosted on the local network
+* get it to work with other AI cloud APIs
+* get it to work with AI models hosted locally or on the local network
