@@ -60,18 +60,16 @@ fably
 
 Press the button on the sound say out loud "tell me a story about a dog" and ear the magic.
 
-## Troubleshooting
-
-Coming soon...
-
-## Installing on a RaspberryPI Zero 2W
+## Installing on a RaspberryPI
 
 We will need:
 
-* a Raspberry Pi Zero 2w
-* a mic hat (as the zero doesn't a mic nor USB ports)
+* a Raspberry Pi (at least a Zero 2w)
+* a mic hat (as the zero doesn't a mic nor USB ports). I tried it with both these sounds cards:
+   * [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
+   * [WM8960 Audio HAT](https://www.waveshare.com/wm8960-audio-hat.htm)
 * a power supply
-* a bluetooth speaker
+* a wired speaker
 
 ### Phase 1 - Install Raspian on the rPI
 
@@ -79,9 +77,9 @@ To install the OS we recommend using the official installer located at https://w
 
 The best choice is the "Raspberry Pi OS (legacy, 64-bit) Lite" which contains the bare minimum to get us going but consumes the least amount of resources and contains the minimum amount of attack surface.
 
-Note that you can press "Ctrl+Shift+X" to open the advanced options that allow you to setup your device with things like hostname, ssh and wifi password. See https://kevinhaffner.blogspot.com/2021/06/hidden-settings-in-raspberry-pi-imager.html for more details.
+Make sure to follow the advanced options that allow us to setup our rpi with things like hostname, wifi password and enable the ssh server so that we don't need keyboards and monitors to connect to it, we can just do it from our regular computer.
 
-Once you are able to ssh into the device, you're ready for the next step.
+Once we are able to ssh into the device, we're ready for the next step.
 
 ### Phase 2 - Update the OS installation
 
@@ -111,10 +109,10 @@ sudo apt install -y \
     python3-numpy \
     python3-pydub \
     python3-gpiozero \
-    python3-bluez \
+    python3-bluez
 ```
 
-When this is done, create a python environment for Fably
+When this is done, create a python environment for Fably (the Raspberry OS is very picky about not letting you install pip without using virtual environments for Python):
 
 ```bash
 python -m venv --system-site-packages .venv
@@ -128,7 +126,7 @@ Type
 ```bash
 git clone https://github.com/stefanom/fably
 cd fably
-pip install .
+pip install --editable .
 ```
 
 and make sure that Fably works as intended by typing
@@ -139,14 +137,16 @@ fably --help
 
 ### Phase 5 - Configure the OpenAPI api key
 
+If you haven't done so already, go to https://platform.openai.com/api-keys to obtain your API key.
+
 ```bash
 cp env.example .env
 echo <your_api_key> >> .env
 ```
 
-### Phase 6 - Install drivers for the [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
+### Phase 6.a - Install drivers for the [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
 
-Skip this section if that's not the sound card that your RPI has.
+Skip this section if that's not the sound card that you have.
 
 First we download the source code for the HAT drivers
 
@@ -166,7 +166,6 @@ git checkout v$version
 at this point we're ready to make the driver, install it and reboot
 
 ```bash
-make
 sudo ./install.sh
 sudo reboot
 ```
@@ -186,7 +185,58 @@ card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hi
   Subdevice #0: subdevice #0
 ```
 
-we can also play a sound like this
+we can test the card by playing a sound like this
+
+```
+aplay /usr/share/sounds/alsa/Front_Center.wav
+```
+
+### Phase 6.b - Install drivers for the [WM8960 Audio HAT](https://www.waveshare.com/wm8960-audio-hat.htm)
+
+Skip this section if that's not the sound card that you have.
+
+First we download the source code for the HAT drivers
+
+```bash
+git clone https://github.com/waveshare/WM8960-Audio-HAT
+cd WM8960-Audio-HAT
+```
+
+then we build and install the drivers
+
+```bash
+sudo ./install.sh
+sudo reboot
+```
+
+Then log back into the RPI after it reboots and then type
+
+```bash
+sudo dkms status
+```
+
+and we should be seeing something like this:
+
+```txt
+wm8960-soundcard, 1.0, 4.19.58-v7l+, armv7l: installed
+```
+
+then typing
+
+```bash
+arecord -l
+```
+
+and we should be seeing something like 
+
+```txt
+**** List of CAPTURE Hardware Devices ****
+card 0: wm8960soundcard [wm8960-soundcard], device 0: bcm2835-i2s-wm8960-hifi wm8960-hifi-0 []
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+```
+
+we can test the card by playing a sound like this
 
 ```
 aplay /usr/share/sounds/alsa/Front_Center.wav
@@ -275,12 +325,12 @@ Luckily for us, high quality TTS audio is generally well enunciated and that tak
 
 ## Short term
 
+* make sure that it works with the WM8960 Audio HAT
 * make the query guard system more sophisticated
 * look into ways to make the stories more divergent
 
 ## Longer term
 
-* get it to work with other RPI sound cards
 * get it to work on ESP32-based boards
 * get it to work with other APIs
 * get it to work with models hosted on the local network
