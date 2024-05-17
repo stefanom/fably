@@ -17,9 +17,9 @@ All you need to get started is a computer (doesn't matter which operating system
 type this into your command line
 
 ```sh
-git clone git@github.com:stefanom/fably.git
+git clone https://github.com/stefanom/fably.git
 cd fably
-pip install .
+pip install --editable .
 ```
 
 ### Listening to examples
@@ -27,16 +27,18 @@ pip install .
 In the `example` folder, there are several examples of generated stories along with the synthetized speech. You can listen to them directly here from github or you can run the following command to run use Fably itself to tell the story already generated
 
 ```sh
-fably --query "Tell me a story about a princess and a frog" --stories-home=./examples/openai_cheap
+fably --stories-path=./examples/openai_cheap "Tell me a story about a princess and a frog" 
 ```
 
 will play the example from `openai_cheap` which uses GPT-3.5 and TTS-1 as the LLM and TTS model respectively. If you change the above to `openai_expensive`, it will play the example from `openai_expensive` which used GPT-4o and TTS-1-HD instead.
 
 ### Setting up the OpenAI Key
 
-Go to https://platform.openai.com/api-keys and obtain a new API key.
+To enable Fably to tell new stories, we need an OpenAI API key. Go to https://platform.openai.com/api-keys to obtain one.
 
-Then run this command in Windows
+NOTE: OpenAI might require you to enter a credit card to obtain an API key. We will be responsible to pay for the usage of these computationally demanding API calls.
+
+Once you have the key run this command in Windows
 
 ```sh
 copy env.example .env
@@ -50,7 +52,7 @@ cp env.example .env
 
 and add your OpenAI key in that file.
 
-### Creating a story
+### Telling a new story
 
 For this, we'll need to have a microphone available to our computer. Run this command to have fably listen to your voice query and tell you a story:
 
@@ -58,7 +60,7 @@ For this, we'll need to have a microphone available to our computer. Run this co
 fably 
 ```
 
-Press the button on the sound say out loud "tell me a story about a dog" and ear the magic.
+Once Fably is done introducing itself, say out loud "tell me a story about a dog" (or whatever story you want. Just make sure to start with "tell me a story" as Fably will not repsond to any other query) and let Fably do its magic.
 
 ## Installing on a RaspberryPI
 
@@ -66,8 +68,8 @@ We will need:
 
 * a Raspberry Pi (at least a Zero 2w)
 * a mic hat (as the zero doesn't a mic nor USB ports). I tried it with both these sounds cards:
-   * [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
-   * [WM8960 Audio HAT](https://www.waveshare.com/wm8960-audio-hat.htm)
+  * [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
+  * [WM8960 Audio HAT](https://www.waveshare.com/wm8960-audio-hat.htm)
 * a power supply
 * a wired speaker
 
@@ -331,15 +333,15 @@ There are more things we need to consider though:
 
 Luckily for us, high quality TTS audio is generally well enunciated and that takes time to play back. This give us plenty of time to obtain a new paragraph and send it off to the TSS service before the previous one has finished playing. This gives the listener the perception of a quick response and no pauses between paragraphs, even if the components of the audio stream are being assembled in flight behind the scenes.
 
-# Roadmap
+## Roadmap
 
-## Short term
+### Short term
 
 * make sure that it works with the WM8960 Audio HAT
 * make the query guard system more sophisticated
 * look into ways to make the stories more divergent
 
-## Longer term
+### Longer term
 
 * get it to work on ESP32-based boards
 * get it to work with other AI cloud APIs
