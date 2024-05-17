@@ -9,7 +9,10 @@ import shutil
 import time
 import threading
 
-from gpiozero import Button
+try:
+    from gpiozero import Button
+except (ImportError, NotImplementedError):
+    Button = None
 
 from fably import utils
 
@@ -79,7 +82,10 @@ async def writer(ctx, story_queue, query=None):
     processes the returned content as a stream, chunks it into paragraphs and appends them
     to the queue for downstream processing.
     """
-    if not query:
+    if query:
+        query_local = "n/a"
+        voice_query_file = None
+    else:
         utils.play_sound("what_story", audio_driver=ctx.sound_driver)
 
         voice_query, query_sample_rate, query_local = utils.record_until_silence(
@@ -119,8 +125,10 @@ async def writer(ctx, story_queue, query=None):
             story_path / "info.yaml", query=query, query_local=query_local
         )
 
-        logging.debug("Copying the original voice query...")
-        shutil.move(voice_query_file, story_path / "voice_query.wav")
+        # This file will not exist when the query is passed as an argument
+        if voice_query_file:
+            logging.debug("Copying the original voice query...")
+            shutil.move(voice_query_file, story_path / "voice_query.wav")
 
         logging.debug("Reading prompt...")
         prompt = utils.read_from_file(ctx.prompt_file)
@@ -196,7 +204,7 @@ async def speaker(ctx, reading_queue):
             await loop.run_in_executor(pool, speak)
 
 
-async def run_story_loop(ctx, query=None):
+async def run_story_loop(ctx, query=None, terminate=False):
     """
     The main loop for running the story.
     """
@@ -215,14 +223,17 @@ async def run_story_loop(ctx, query=None):
     ctx.leds.stop()
     ctx.talking = False
 
+    if terminate:
+        ctx.running = False
 
-def tell_story(ctx, query=None):
+
+def tell_story(ctx, query=None, terminate=False):
     """
     Forks off a thread to tell the story.
     """
 
     def tell_story_wrapper():
-        asyncio.run(run_story_loop(ctx, query))
+        asyncio.run(run_story_loop(ctx, query, terminate))
 
     threading.Thread(target=tell_story_wrapper).start()
 
@@ -234,66 +245,62 @@ def main(ctx, query=None):
 
     ctx.sync_client, ctx.async_client = utils.get_openai_clients()
 
-    # If a query is present, we're just telling that story and exit
-    if query:
-        asyncio.run(tell_story(ctx, query=query))
-        return
+    # If a query is not present, introduce ourselves
+    if not query:
+        ctx.recognizer = utils.get_speech_recognizer(ctx.models_path, ctx.sound_model)
 
-    ctx.leds.start()
-    utils.play_sound("startup", audio_driver=ctx.sound_driver)
-
-    ctx.recognizer = utils.get_speech_recognizer(ctx.models_path, ctx.sound_model)
+    if ctx.loop:
+        ctx.leds.start()
+        utils.play_sound("startup", audio_driver=ctx.sound_driver)
 
     # Let's introduce ourselves
     utils.play_sound("hi", audio_driver=ctx.sound_driver)
 
-    # If we're not running in a loop we just tell one story
-    if not ctx.loop:
-        tell_story(ctx)
-        return
+    # If we're not running in a loop or we don't have GPIO buttons, we just tell one story
+    if ctx.loop and Button:
 
-    # If we get here, we're asked to run in a continuous loop
+        def pressed(ctx):
+            ctx.press_time = time.time()
+            logging.debug("Button pressed")
 
-    def pressed(ctx):
-        ctx.press_time = time.time()
-        logging.debug("Button pressed")
+        def released(ctx):
+            release_time = time.time()
+            pressed_for = release_time - ctx.press_time
+            logging.debug("Button released after %f seconds", pressed_for)
 
-    def released(ctx):
-        release_time = time.time()
-        pressed_for = release_time - ctx.press_time
-        logging.debug("Button released after %f seconds", pressed_for)
+            if pressed_for < ctx.button.hold_time:
+                if not ctx.talking:
+                    logging.info("This is a short press. Telling a story...")
+                    tell_story(ctx, terminate=False)
+                    logging.debug("Forked the storytelling thread")
+                else:
+                    logging.debug(
+                        "This is a short press, but we are already telling a story."
+                    )
 
-        if pressed_for < ctx.button.hold_time:
-            if not ctx.talking:
-                logging.info("This is a short press. Telling a story...")
-                tell_story(ctx)
-                logging.debug("Forked the storytelling thread")
-            else:
-                logging.info(
-                    "This is a short press while telling a story, so stopping."
-                )
-                ctx.talking = False
+        def held(ctx):
+            logging.info("This is a hold press. Shutting down.")
+            ctx.running = False
 
-    def held(ctx):
-        logging.info("This is a hold press. Shutting down.")
-        ctx.running = False
+        ctx.button = Button(pin=ctx.button_gpio_pin, hold_time=ctx.hold_time)
+        ctx.button.when_pressed = lambda: pressed(ctx)
+        ctx.button.when_released = lambda: released(ctx)
+        ctx.button.when_held = lambda: held(ctx)
 
-    ctx.button = Button(pin=ctx.button_gpio_pin, hold_time=ctx.hold_time)
-    ctx.button.when_pressed = lambda: pressed(ctx)
-    ctx.button.when_released = lambda: released(ctx)
-    ctx.button.when_held = lambda: held(ctx)
+        # Give instruction for loop mode
+        utils.play_sound("instructions", audio_driver=ctx.sound_driver)
 
-    # Give instruction for loop mode
-    utils.play_sound("instructions", audio_driver=ctx.sound_driver)
+        # Stop the LEDs once we're ready.
+        ctx.leds.stop()
+    else:
+        # Here the query can be None, but it's ok.
+        # We will record one from the user in that case.
+        tell_story(ctx, query=query, terminate=True)
 
-    # Stop the LEDs once we're ready to roll.
-    ctx.leds.stop()
-
-    # Keep looping until the hold function sets running to false
+    # Keep the main thread from existing until we're done.
     while ctx.running:
         time.sleep(1.0)
 
-    # If we get here, we're done so let's say goodbye
     utils.play_sound("bye", audio_driver=ctx.sound_driver)
 
     logging.debug("Shutting down... bye!")

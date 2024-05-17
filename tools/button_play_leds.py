@@ -3,8 +3,16 @@
 
 import threading
 
-from apa102_pi.colorschemes import colorschemes
-from gpiozero import Button
+try:
+    from apa102_pi.colorschemes import colorschemes
+except ImportError:
+    colorschemes = None
+
+try:
+    from gpiozero import Button
+except ImportError:
+    Button = None
+
 from fably import utils
 
 
@@ -19,15 +27,16 @@ def play_sound():
 
 
 def flash_leds():
-    my_cycle = colorschemes.TheaterChase(
-        num_led=NUM_LED,
-        pause_value=0.03,
-        num_steps_per_cycle=35,
-        num_cycles=CYCLES,
-        order="rgb",
-        global_brightness=BRIGHTNESS,
-    )
-    my_cycle.start()
+    if colorschemes:
+        my_cycle = colorschemes.TheaterChase(
+            num_led=NUM_LED,
+            pause_value=0.03,
+            num_steps_per_cycle=35,
+            num_cycles=CYCLES,
+            order="rgb",
+            global_brightness=BRIGHTNESS,
+        )
+        my_cycle.start()
 
 
 def button_pressed():
@@ -41,8 +50,12 @@ def button_pressed():
 
 
 def main():
-    button = Button(GPIO_PIN)
-    button.when_pressed = button_pressed
+    try:
+        button = Button(GPIO_PIN)
+        button.when_pressed = button_pressed
+    except Exception:  # pylint: disable=W0703
+        print("GPIO pin not found. Can't run this test.")
+        return
 
     try:
         print("Press the button on the sound card to play a sound and flash the LEDs.")

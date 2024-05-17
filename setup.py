@@ -11,13 +11,13 @@ setup(
         'apa102-pi',
         'sounddevice',
         'soundfile',
+        'requests',
         'click',
         'python-dotenv',
         'pyyaml',
         'vosk',
         'numpy',
         'pydub',
-        'pybluez',
     ],
     entry_points='''
         [console_scripts]

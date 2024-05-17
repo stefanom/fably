@@ -3,6 +3,7 @@ Fably's Command line interface.
 """
 
 import logging
+import platform
 import sys
 
 import click
@@ -215,6 +216,10 @@ def cli(
 
     ctx.running = True
     ctx.talking = False
+
+    # Alsa is only supported on Linux.
+    if ctx.sound_driver == "alsa" and platform.system() != "Linux":
+        ctx.sound_driver = "sounddevice"
 
     try:
         fably.main(ctx, query)

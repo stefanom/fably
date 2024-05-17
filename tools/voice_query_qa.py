@@ -5,10 +5,13 @@ import time
 import random
 import os
 
-from signal import pause
-
 import click
-from gpiozero import Button
+
+try:
+    from gpiozero import Button
+except ImportError:
+    Button = None
+
 
 from fably import utils
 from fably.cli_utils import pass_context
@@ -60,17 +63,25 @@ def held(ctx):
 )
 @pass_context
 def main(ctx, sound_driver):
+    if Button is None:
+        print("This script requires GPIO buttons to be available.")
+        return
+
     ctx.sound_driver = sound_driver
 
     sound_model = "vosk-model-small-en-us-0.15"
     ctx.sample_rate = 16000
     ctx.recognizer = utils.get_speech_recognizer(utils.resolve("models"), sound_model)
 
-    button = Button(BUTTON_GPIO_PIN, hold_time=HOLD_TIME)
+    try:
+        button = Button(BUTTON_GPIO_PIN, hold_time=HOLD_TIME)
 
-    button.when_pressed = lambda: pressed(ctx)
-    button.when_released = lambda: released(ctx)
-    button.when_held = lambda: held(ctx)
+        button.when_pressed = lambda: pressed(ctx)
+        button.when_released = lambda: released(ctx)
+        button.when_held = lambda: held(ctx)
+    except Exception:  # pylint: disable=W0703
+        print("GPIO pin not found. Can't run this test.")
+        return
 
     ctx.button = button
     ctx.pressed_time = -1
@@ -84,7 +95,8 @@ def main(ctx, sound_driver):
 
     try:
         utils.play_sound("hi", audio_driver=ctx.sound_driver)
-        pause()
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         print("Program terminated.")
 

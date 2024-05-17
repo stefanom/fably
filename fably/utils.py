@@ -5,17 +5,18 @@ Shared utility functions.
 import os
 import re
 import logging
-import subprocess
-import queue
 import json
 import time
 import colorsys
+import zipfile
+import queue
 
 from pathlib import Path
 
 import yaml
 import numpy as np
 import openai
+import requests
 import sounddevice as sd
 import soundfile as sf
 
@@ -102,11 +103,18 @@ def get_speech_recognizer(models_path, model_name):
         model_url = f"https://alphacephei.com/vosk/models/{model_name}.zip"
 
         logging.debug("Downloading the model from %s...", model_url)
-        subprocess.run(["curl", "-o", str(zip_path), model_url], check=True)
+
+        # Download the model
+        with requests.get(model_url, stream=True, timeout=10) as r:
+            r.raise_for_status()
+            with open(zip_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
 
         # Unzip the model
         print("Unzipping the model...")
-        subprocess.run(["unzip", "-o", str(zip_path), "-d", str(model_dir)], check=True)
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(model_dir.parent)
 
         # Remove the zip file after extraction
         os.remove(zip_path)

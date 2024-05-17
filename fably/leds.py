@@ -3,7 +3,11 @@
 import time
 import threading
 
-from apa102_pi.driver import apa102
+try:
+    from apa102_pi.driver import apa102
+except (ImportError, NotImplementedError):
+    apa102 = None
+
 from fably import utils
 
 
@@ -19,6 +23,11 @@ class LEDs:
         self.thread = None
 
     def _run(self):
+        # If we can't load the library, we can't do anything.
+        # We shoudl not be getting here but just in case.
+        if not apa102:
+            return
+
         strip = apa102.APA102(num_led=len(self.colors))
         strip.clear_strip()
 
@@ -34,7 +43,7 @@ class LEDs:
         strip.cleanup()
 
     def start(self):
-        if self.thread:
+        if not apa102 or self.thread:
             return
         self.running = True
         self.thread = threading.Thread(target=self._run)
