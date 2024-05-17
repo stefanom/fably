@@ -10,7 +10,7 @@ Watch Fably running on a Raspberry PI Zero 2W below:
 
 ## How does it work?
 
-Fably uses generative AI to create and tell stories but it is also conceived to be run on cheap hardware (ideally, less than $30). This means that the heavy lifting in terms of computation needs to be done by other devices. This is not ideal but AI models that deliver state-of-the-art quality for speech recognition, story generation and natural speech synthesis are currently way too big to run on edge devices even when the models weight are available.
+Fably uses generative AI to create and tell stories but it is also conceived to be run on cheap hardware (ideally, less than $50). This means that the heavy lifting in terms of computation needs to be done by other devices. This is not ideal but AI models that deliver state-of-the-art quality for speech recognition, story generation and natural speech synthesis are currently way too big to run on edge devices even when the models weight are available.
 
 Fably is designed from the start to call out to other computers via a network. This allows us to run on very cheap devices but have low latency and high quality. Also we have the additional benefit that we can pay-as-we-go and we don't have to invest into expensive GPUs to even see if
 our kids will use it or like it.
