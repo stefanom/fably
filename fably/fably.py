@@ -249,15 +249,12 @@ def main(ctx, query=None):
     if not query:
         ctx.recognizer = utils.get_speech_recognizer(ctx.models_path, ctx.sound_model)
 
-    if ctx.loop:
+    if ctx.loop and Button:
         ctx.leds.start()
         utils.play_sound("startup", audio_driver=ctx.sound_driver)
 
-    # Let's introduce ourselves
-    utils.play_sound("hi", audio_driver=ctx.sound_driver)
-
-    # If we're not running in a loop or we don't have GPIO buttons, we just tell one story
-    if ctx.loop and Button:
+        # Let's introduce ourselves
+        utils.play_sound("hi", audio_driver=ctx.sound_driver)
 
         def pressed(ctx):
             ctx.press_time = time.time()

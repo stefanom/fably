@@ -83,10 +83,10 @@ def resolve(path):
         absolute_path = current_file_path / path
 
     if not absolute_path.exists():
-        if not os.access(absolute_path.parent, os.W_OK):
-            raise PermissionError(f"Cannot write to directory: {absolute_path.parent}")
-        absolute_path.mkdir(parents=True, exist_ok=True)
-
+        try:
+            absolute_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError as e:
+            raise PermissionError(f"Cannot write to directory: {absolute_path}") from e
     return absolute_path
 
 

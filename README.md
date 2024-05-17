@@ -27,10 +27,10 @@ pip install --editable .
 In the `example` folder, there are several examples of generated stories along with the synthetized speech. You can listen to them directly here from github or you can run the following command to run use Fably itself to tell the story already generated
 
 ```sh
-fably --stories-path=./examples/openai_cheap "Tell me a story about a princess and a frog" 
+fably --stories-path=examples/openai_expensive "Tell me a story about a princess and a frog" 
 ```
 
-will play the example from `openai_cheap` which uses GPT-3.5 and TTS-1 as the LLM and TTS model respectively. If you change the above to `openai_expensive`, it will play the example from `openai_expensive` which used GPT-4o and TTS-1-HD instead.
+will play a story that's already generated. Look in the [examples](https://github.com/stefanom/fably/tree/main/fably/examples) folder to see which other stories can be told without requiring an OpenAI key.
 
 ### Setting up the OpenAI Key
 
