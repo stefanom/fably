@@ -164,7 +164,7 @@ async def reader(ctx, story_queue, reading_queue):
     Processes the queue of paragraphs and sends them off to be read
     and synthezized into audio files to be read by the speaker.
     """
-    while True:
+    while ctx.talking:
         item = await story_queue.get()
         if item is None:
             logging.debug("Done reading the story.")
@@ -183,13 +183,14 @@ async def speaker(ctx, reading_queue):
     """
     loop = asyncio.get_running_loop()
     with concurrent.futures.ThreadPoolExecutor() as pool:
-        while True:
+        while ctx.talking:
             audio_file = await reading_queue.get()
             if audio_file is None:
                 logging.debug("Done playing the story.")
                 break
 
             def speak():
+                ctx.leds.stop()
                 utils.play_audio_file(audio_file, ctx.sound_driver)
 
             await loop.run_in_executor(pool, speak)
@@ -268,9 +269,10 @@ def main(ctx, query=None):
                 tell_story(ctx)
                 logging.debug("Forked the storytelling thread")
             else:
-                logging.debug(
-                    "This is a short press, but we are already telling a story."
+                logging.info(
+                    "This is a short press while telling a story, so stopping."
                 )
+                ctx.talking = False
 
     def held(ctx):
         logging.info("This is a hold press. Shutting down.")
