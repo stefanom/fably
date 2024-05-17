@@ -189,7 +189,7 @@ card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hi
 
 we can test the card by playing a sound like this
 
-```
+```bash
 aplay /usr/share/sounds/alsa/Front_Center.wav
 ```
 
@@ -229,7 +229,7 @@ then typing
 arecord -l
 ```
 
-and we should be seeing something like 
+and we should be seeing something like this
 
 ```txt
 **** List of CAPTURE Hardware Devices ****
@@ -240,7 +240,7 @@ card 0: wm8960soundcard [wm8960-soundcard], device 0: bcm2835-i2s-wm8960-hifi wm
 
 we can test the card by playing a sound like this
 
-```
+```bash
 aplay /usr/share/sounds/alsa/Front_Center.wav
 ```
 
@@ -257,11 +257,13 @@ Your RPI should start by speaking to you!
 ## Unattended updates
 
 1. Install `unattended-upgrades` package:
+
    ```bash
    apt install unattended-upgrades
    ```
 
 2. Add Raspberry Pi Foundation sources to `unattended-upgrades` config:
+
    ```conf
     # /etc/apt/apt.conf.d/50unattended-upgrades
     
