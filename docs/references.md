@@ -34,6 +34,11 @@
     * [TSS Arena](https://huggingface.co/spaces/TTS-AGI/TTS-Arena)
     * [StyleTTS2](https://github.com/yl4579/StyleTTS2) ([demo](https://huggingface.co/spaces/styletts2/styletts2))
     * [Coqui XTTS](https://huggingface.co/coqui/XTTS-v2) ([demo](https://huggingface.co/spaces/coqui/xtts))
+  * RPI 4 capable
+    * [Piper](https://github.com/rhasspy/piper)
+
+* speech-to-text
+  * [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
 
 * hotword detection
   * [Reference](github.com/zycv/awesome-keyword-spotting)
