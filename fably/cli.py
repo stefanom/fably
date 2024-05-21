@@ -3,6 +3,7 @@ Fably's Command line interface.
 """
 
 import logging
+import os
 import platform
 import sys
 
@@ -16,6 +17,8 @@ from fably import leds
 
 from fably.cli_utils import pass_context
 
+OPENAI_URL = "https://api.openai.com/v1"
+OLLAMA_URL = "http://127.0.0.1:11434/v1"
 
 PROMPT_FILE = "./prompt.txt"
 QUERIES_PATH = "./queries"
@@ -23,11 +26,15 @@ STORIES_PATH = "./stories"
 MODELS_PATH = "./models"
 SOUND_MODEL = "vosk-model-small-en-us-0.15"
 SAMPLE_RATE = 24000
-SST_MODEL = "whisper-1"
+STT_URL = OPENAI_URL
+STT_MODEL = "whisper-1"
+LLM_URL = OPENAI_URL
+# LLM_URL = OLLAMA_URL
 LLM_MODEL = "gpt-4o"
 # LLM_MODEL = "gpt-3.5-turbo"
 TEMPERATURE = 1.0
 MAX_TOKENS = 2000
+TTS_URL = OPENAI_URL
 TTS_MODEL = "tts-1"
 TTS_VOICE = "nova"
 TTS_FORMAT = "mp3"
@@ -77,13 +84,22 @@ load_dotenv()
     help=f'The model to use to discriminate speech in voice queries. Defaults to "{SOUND_MODEL}".',
 )
 @click.option(
+    "--stt-url",
+    default=LLM_URL,
+    help=f'The URL of the cloud endpoint for the STT model. Defaults to "{STT_URL}".',
+)
+@click.option(
     "--stt-model",
-    default=SST_MODEL,
-    help=f'The STT model to use when generating stories. Defaults to "{SST_MODEL}".',
+    default=STT_MODEL,
+    help=f'The STT model to use when generating stories. Defaults to "{STT_MODEL}".',
+)
+@click.option(
+    "--llm-url",
+    default=LLM_URL,
+    help=f'The URL of the cloud endpoint for the LLM model. Defaults to "{LLM_URL}".',
 )
 @click.option(
     "--llm-model",
-    type=click.Choice(["gpt-3.5-turbo", "gpt-4o"], case_sensitive=False),
     default=LLM_MODEL,
     help=f'The LLM model to use when generating stories. Defaults to "{LLM_MODEL}".',
 )
@@ -98,6 +114,11 @@ load_dotenv()
     type=int,
     default=MAX_TOKENS,
     help="The maximum number of tokens to use when generating stories. Defaults to {MAX_TOKENS}.",
+)
+@click.option(
+    "--tts-url",
+    default=LLM_URL,
+    help=f'The URL of the cloud endpoint for the TTS model. Defaults to "{TTS_URL}".',
 )
 @click.option(
     "--tts-model",
@@ -166,10 +187,13 @@ def cli(
     stories_path,
     models_path,
     sound_model,
+    stt_url,
     stt_model,
+    llm_url,
     llm_model,
     temperature,
     max_tokens,
+    tts_url,
     tts_model,
     tts_voice,
     tts_format,
@@ -189,8 +213,11 @@ def cli(
         logging.basicConfig(level=logging.INFO)
 
     ctx.sound_model = sound_model
+    ctx.stt_url = stt_url
     ctx.stt_model = stt_model
+    ctx.llm_url = llm_url
     ctx.llm_model = llm_model
+    ctx.tts_url = tts_url
     ctx.tts_model = tts_model
     ctx.temperature = temperature
     ctx.sample_rate = sample_rate
@@ -216,6 +243,12 @@ def cli(
 
     ctx.running = True
     ctx.talking = False
+
+    ctx.api_key = os.getenv("OPENAI_API_KEY")
+    if ctx.api_key is None:
+        raise ValueError(
+            "OPENAI_API_KEY environment variable not set or .env file not found."
+        )
 
     # Alsa is only supported on Linux.
     if ctx.sound_driver == "alsa" and platform.system() != "Linux":

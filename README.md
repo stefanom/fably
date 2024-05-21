@@ -258,7 +258,22 @@ sudo reboot
 
 Your RPI should start by speaking to you!
 
-## Unattended updates
+## Getting it to work with locally hosted models
+
+WARNING: this is new functionality that is not well tested yet! Use at your own risk!
+
+If we want to use Fably with locally hosted models (for costs or privacy reasons or both), we can do so by following these steps.
+
+1. Install [Ollama](https://ollama.com/)
+2. Download whatever model we want (I'd suggest to start with [LLama3:7b](https://ollama.com/library/llama3) to try it out)
+3. Pass the URL to Ollama's endpoint as a parameter to Fably with `--llm-url` when [starting it](https://github.com/stefanom/fably/blob/main/startup/start_fably.sh).
+4. Make sure that the Ollama endpoint is accessible from the RPI.
+
+CAUTION: Ollama default host is 127.0.0.1 which means it will only respond to requests coming from the same machine. We need to change `OLLAMA_HOST` environment to be `0.0.0.0` instead to imply that it should respond to requests coming from other machines as well.
+
+## Having Fably staying up-to-date
+
+Here is how you can automate Fably staying up to date with the latest security patches and bug fixes.
 
 1. Install `unattended-upgrades` package:
 
@@ -280,7 +295,9 @@ Your RPI should start by speaking to you!
 
 3. After `unattended-upgrades` logs are produced, you can verify the new sources are picked up for updates in `/var/log/unattended-upgrades/unattended-upgrades.log`.
 
-## Technical Details
+## Under the hood
+
+This section contains information on how Fably works.
 
 The most naive implementation would chain the calls to the cloud API calls like this:
 
@@ -345,10 +362,9 @@ Luckily for us, high quality TTS audio is generally well enunciated and that tak
 
 * make sure that it works with the WM8960 Audio HAT
 * make the query guard system more sophisticated
-* look into ways to make the stories more divergent
+* look into ways to make the stories more divergent (is increasing temp enough?)
 
 ### Longer term
 
 * get it to work on ESP32-based boards
 * get it to work with other AI cloud APIs
-* get it to work with AI models hosted locally or on the local network

@@ -15,7 +15,6 @@ from pathlib import Path
 
 import yaml
 import numpy as np
-import openai
 import requests
 import sounddevice as sd
 import soundfile as sf
@@ -124,17 +123,6 @@ def get_speech_recognizer(models_path, model_name):
     return KaldiRecognizer(
         model, QUERY_SAMPLE_RATE
     )  # The sample rate is fixed in the model
-
-
-def get_openai_clients():
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if openai_api_key is None:
-        raise ValueError(
-            "OPENAI_API_KEY environment variable not set or .env file not found."
-        )
-    sync_client = openai.Client(api_key=openai_api_key)
-    async_client = openai.AsyncClient(api_key=openai_api_key)
-    return sync_client, async_client
 
 
 def write_audio_data_to_file(audio_data, audio_file, sample_rate):
@@ -261,7 +249,7 @@ def record_until_silence(
 
 
 def transcribe(
-    sync_client,
+    stt_client,
     audio_data,
     stt_model="whisper-1",
     language="en",
@@ -287,7 +275,7 @@ def transcribe(
     logging.debug("Sending voice query for transcription...")
 
     with open(audio_file, "rb") as query:
-        response = sync_client.audio.transcriptions.create(
+        response = stt_client.audio.transcriptions.create(
             model=stt_model, language=language, file=query
         )
 

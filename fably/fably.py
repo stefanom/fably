@@ -9,6 +9,8 @@ import shutil
 import time
 import threading
 
+import openai
+
 try:
     from gpiozero import Button
 except (ImportError, NotImplementedError):
@@ -23,7 +25,7 @@ def generate_story(ctx, query, prompt):
     about the models used to generate the story to a file.
     """
 
-    return ctx.async_client.chat.completions.create(
+    return ctx.llm_client.chat.completions.create(
         stream=True,
         model=ctx.llm_model,
         messages=[
@@ -57,7 +59,7 @@ async def synthesize_audio(ctx, story_path, index, text=None):
         else:
             raise ValueError(f"No text found for paragraph {index} in {story_path}")
 
-    response = await ctx.async_client.audio.speech.create(
+    response = await ctx.tts_client.audio.speech.create(
         input=text,
         model=ctx.tts_model,
         voice=ctx.tts_voice,
@@ -92,7 +94,7 @@ async def writer(ctx, story_queue, query=None):
             ctx.recognizer, ctx.trim_first_frame
         )
         query, voice_query_file = utils.transcribe(
-            ctx.sync_client,
+            ctx.stt_client,
             voice_query,
             ctx.stt_model,
             ctx.language,
@@ -243,7 +245,9 @@ def main(ctx, query=None):
     The main Fably loop.
     """
 
-    ctx.sync_client, ctx.async_client = utils.get_openai_clients()
+    ctx.stt_client = openai.Client(base_url=ctx.stt_url, api_key=ctx.api_key, )
+    ctx.llm_client = openai.AsyncClient(base_url=ctx.llm_url, api_key=ctx.api_key)
+    ctx.tss_client = openai.AsyncClient(base_url=ctx.tss_url, api_key=ctx.api_key)
 
     # If a query is not present, introduce ourselves
     if not query:

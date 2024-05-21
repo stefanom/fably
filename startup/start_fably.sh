@@ -11,4 +11,9 @@ source /home/fably/.venv/bin/activate
 
 echo "Run Fably continously..."
 cd /home/fably/fably
+
+# Run Fably in a constant loop (using the default APIs)
 fably --loop
+
+# Use this command to talk to a local LLM model served by Ollama instead
+# fably --loop --llm-url=http://mygpu.local:11434/v1
