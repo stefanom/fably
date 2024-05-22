@@ -16,4 +16,4 @@ cd /home/fably/fably
 fably --loop
 
 # Use this command to talk to a local LLM model served by Ollama instead
-# fably --loop --llm-url=http://mygpu.local:11434/v1
+# fably --loop --llm-url=http://mygpu.local:11434/v1 --llm-model=llama3:latest
