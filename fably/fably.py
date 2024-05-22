@@ -247,7 +247,7 @@ def main(ctx, query=None):
 
     ctx.stt_client = openai.Client(base_url=ctx.stt_url, api_key=ctx.api_key, )
     ctx.llm_client = openai.AsyncClient(base_url=ctx.llm_url, api_key=ctx.api_key)
-    ctx.tss_client = openai.AsyncClient(base_url=ctx.tss_url, api_key=ctx.api_key)
+    ctx.tts_client = openai.AsyncClient(base_url=ctx.tts_url, api_key=ctx.api_key)
 
     # If a query is not present, introduce ourselves
     if not query:

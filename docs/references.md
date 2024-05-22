@@ -31,7 +31,7 @@
     * [Amazon Polly](https://aws.amazon.com/polly/) ([demo](https://us-east-1.console.aws.amazon.com/polly/home/SynthesizeSpeech?region=us-east-1#))
     * [ElevenLabs](https://elevenlabs.io/)
   * Open Source models
-    * [TSS Arena](https://huggingface.co/spaces/TTS-AGI/TTS-Arena)
+    * [TTS Arena](https://huggingface.co/spaces/TTS-AGI/TTS-Arena)
     * [StyleTTS2](https://github.com/yl4579/StyleTTS2) ([demo](https://huggingface.co/spaces/styletts2/styletts2))
     * [Coqui XTTS](https://huggingface.co/coqui/XTTS-v2) ([demo](https://huggingface.co/spaces/coqui/xtts))
   * RPI 4 capable
