@@ -18,6 +18,7 @@ setup(
         'vosk',
         'numpy',
         'pydub',
+        'gpiozero',
     ],
     entry_points='''
         [console_scripts]
