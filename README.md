@@ -40,7 +40,7 @@ will play a story that's already generated. Look in the [examples](https://githu
 
 To enable Fably to tell new stories, we need an OpenAI API key. Go to https://platform.openai.com/api-keys to obtain one.
 
-NOTE: OpenAI might require you to enter a credit card to obtain an API key. We will be responsible to pay for the usage of these computationally demanding API calls.
+NOTE: OpenAI might require you to enter a credit card to obtain an API key. You will be responsible to pay for the usage of these computationally demanding API calls.
 
 Once you have the key run this command in Windows
 
