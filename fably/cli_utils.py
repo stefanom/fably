@@ -21,10 +21,13 @@ class Context:
         self.sound_driver = "alsa"
         self.sample_rate = 16000
         self.language = "en"
+        self.stt_url = None
         self.stt_model = None
+        self.llm_url = None
         self.llm_model = None
         self.temperature = 0
         self.max_tokens = 0
+        self.tts_url = None
         self.tts_model = None
         self.tts_voice = None
         self.running = True
@@ -35,10 +38,13 @@ class Context:
         """
         info = {
             "language": self.language,
+            "stt_url": self.stt_url,
             "stt_model": self.stt_model,
+            "llm_url": self.stt_llm,
             "llm_model": self.llm_model,
             "llm_temperature": self.temperature,
             "llm_max_tokens": self.max_tokens,
+            "tts_url": self.tts_url,
             "tts_model": self.tts_model,
             "tts_voice": self.tts_voice,
         }
