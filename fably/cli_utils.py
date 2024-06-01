@@ -40,7 +40,7 @@ class Context:
             "language": self.language,
             "stt_url": self.stt_url,
             "stt_model": self.stt_model,
-            "llm_url": self.stt_llm,
+            "llm_url": self.llm_url,
             "llm_model": self.llm_model,
             "llm_temperature": self.temperature,
             "llm_max_tokens": self.max_tokens,

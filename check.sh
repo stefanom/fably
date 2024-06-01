@@ -12,4 +12,4 @@ if ! command -v pylint &> /dev/null ; then
 fi
 
 echo "Running pylint..."
-pylint fably tools/*.py
+pylint fably tools/*.py servers/stt_server/*.py servers/tts_server/*.py

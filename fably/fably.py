@@ -124,8 +124,8 @@ async def writer(ctx, story_queue, query=None):
 
         logging.debug("Writing model info to disk...")
         ctx.persist_runtime_params(
-            story_path / "info.yaml", 
-            query=query, 
+            story_path / "info.yaml",
+            query=query,
             query_local=query_local,
         )
 
