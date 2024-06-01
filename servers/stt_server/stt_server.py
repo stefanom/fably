@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import click
-import soundfile as sf
 
 from flask import Flask, request, jsonify
 from faster_whisper import WhisperModel
