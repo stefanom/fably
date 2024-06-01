@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import tempfile
 from pathlib import Path
 
@@ -9,17 +11,16 @@ app = Flask(__name__)
 
 
 def transcribe(model, audio_path, language):
-    segments, info = model.transcribe(audio_path, language=language)
-    transcriptions = [segment.text for segment in segments]
-    return ''.join(transcriptions).strip()
+    segments, _ = model.transcribe(audio_path, language=language)
+    return ''.join(segment.text for segment in segments).strip()
 
 
 @app.route('/v1/audio/transcriptions', methods=['POST'])
-def transcriptions():
+def transcriptions_handler():
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No audio file provided"}), 400
-        
+
         audio_file = request.files['file']
 
         # Save the audio file to a temporary location
@@ -38,7 +39,7 @@ def transcriptions():
 
 
 @app.route('/status', methods=['GET'])
-def status():
+def status_handler():
     return jsonify({"status": "Service is up and running"}), 200
 
 
@@ -46,17 +47,17 @@ def status():
 @click.option('--host', default='0.0.0.0', help='Host to run the web service on.')
 @click.option('--port', default=5000, help='Port to run the web service on.')
 @click.option('--language', default='en', help='The language to expect.')
-@click.option('--model', default='tiny', help='Whisper model to use (e.g., tiny, base, small, medium, large).')
-@click.option('--device', default='cpu', help='Device to run the model on (e.g., cpu, cuda).')
-def main(host, port, language, model, device):    
-    app.config['MODEL'] = WhisperModel(model, device=device)
+@click.option('--stt_model', default='tiny', help='Whisper model to use (e.g., tiny, base, small, medium, large).')
+def main(host, port, language, stt_model):
     app.config['LANGUAGE'] = language
 
-    # Test transcription to ensure model works before exposing the service.
+    app.config['STT_MODEL'] = WhisperModel(stt_model)
+
+    # Test that models work before exposing the service.
     test_audio_path = Path(__file__).resolve().parent / 'hi.wav'
     if test_audio_path.exists():
-        print(transcribe(app.config['MODEL'], str(test_audio_path), language))
-    
+        transcribe(app.config['STT_MODEL'], test_audio_path, language)
+
     app.run(host=host, port=port)
 
 

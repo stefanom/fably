@@ -15,5 +15,6 @@ cd /home/fably/fably
 # Run Fably in a constant loop (using the default APIs)
 fably --loop
 
-# Use this command to talk to a local LLM model served by Ollama instead
-# fably --loop --llm-url=http://mygpu.local:11434/v1 --llm-model=llama3:latest
+# Use this command to talk to APIs running on your own machine.
+# See https://github.com/stefanom/fably/blob/main/servers/README.md for more information on running APIs locally.
+# fably --loop --stt-url=http://mygpu.local:5000/v1 --llm-url=http://mygpu.local:11434/v1 --llm-model=llama3:latest --tts-url=http://mygpu.local:5001/v1
