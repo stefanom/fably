@@ -4,6 +4,8 @@ import tempfile
 from pathlib import Path
 
 import click
+import soundfile as sf
+
 from flask import Flask, request, jsonify
 from faster_whisper import WhisperModel
 
@@ -18,7 +20,7 @@ def transcribe(model, audio_path, language):
 @app.route('/v1/audio/transcriptions', methods=['POST'])
 def transcriptions_handler():
     try:
-        if 'file' not in request.files:
+        if "file" not in request.files:
             return jsonify({"error": "No audio file provided"}), 400
 
         audio_file = request.files['file']
@@ -34,7 +36,7 @@ def transcriptions_handler():
         # Return the transcription result as a single string
         return jsonify({"text": transcription}), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         return jsonify({"error": str(e)}), 500
 
 
@@ -61,5 +63,5 @@ def main(host, port, language, stt_model):
     app.run(host=host, port=port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

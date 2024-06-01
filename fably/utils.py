@@ -263,7 +263,7 @@ def transcribe(
     file_name = time.strftime("%d_%m_%Y-%H_%M_%S") + ".wav"
 
     if not audio_path:
-        audio_file = file_name
+        audio_file = Path(file_name)
     else:
         audio_path = audio_path if isinstance(audio_path, Path) else Path(audio_path)
         if audio_path.is_dir():
