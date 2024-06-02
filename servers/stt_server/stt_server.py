@@ -30,12 +30,13 @@ def transcriptions_handler():
             audio_file.save(tmp_path)
 
             # Transcribe the audio file
-            transcription = transcribe(app.config['MODEL'], str(tmp_path), app.config['LANGUAGE'])
+            transcription = transcribe(app.config['STT_MODEL'], str(tmp_path), app.config['LANGUAGE'])
 
         # Return the transcription result as a single string
         return jsonify({"text": transcription}), 200
 
     except Exception as e:  # pylint: disable=broad-except
+        print(e)
         return jsonify({"error": str(e)}), 500
 
 

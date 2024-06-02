@@ -9,28 +9,25 @@ from whisperspeech.pipeline import Pipeline
 app = Flask(__name__)
 
 
-def speak(model, text, language, speed):
-    return model.generate(text, speaker=None, lang=language, cps=speed)
-
-
 @app.route('/v1/audio/speech', methods=['POST'])
 def speech_handler():
     data = request.get_json()
 
-    if not data or 'text' not in data:
-        return jsonify({"error": "Invalid request. 'text' field is required."}), 400
+    if not data or 'input' not in data:
+        return jsonify({"error": "Invalid request. 'input' field is required."}), 400
 
-    text = data['text']
+    text = data['input']
+
+    print(text)
+
     language = app.config['LANGUAGE']
     model = app.config['TTS_MODEL']
     speed = app.config['TTS_SPEED']
 
-    audio = speak(model, text, language, speed)
-
-    # Save the audio to a temporary file
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
-        tmp_file.write(audio)
         tmp_file_path = tmp_file.name
+
+    model.generate_to_file(tmp_file_path, text, speaker=None, lang=language, cps=speed)
 
     return send_file(tmp_file_path, mimetype='audio/wav'), 200
 
@@ -47,13 +44,14 @@ def status_handler():
 @click.option('--tts_model', default='tiny', help='WhisperSpeech model to use (e.g., tiny, base, small, hq-fast).')
 @click.option('--tts_speed', default=15, help='Characters per second to speak.')
 def main(host, port, language, tts_model, tts_speed):
-    app.config['LANGUAGE'] = language
+    model = Pipeline(s2a_ref=f"whisperspeech/whisperspeech:s2a-q4-{tts_model}-en+pl.model", torch_compile=True)
 
-    app.config['TTS_MODEL'] = Pipeline(s2a_ref=f"whisperspeech/whisperspeech:s2a-q4-{tts_model}-en+pl.model")
+    app.config['LANGUAGE'] = language
+    app.config['TTS_MODEL'] = model
     app.config['TTS_SPEED'] = tts_speed
 
     # Test that models work before exposing the service.
-    speak(app.config['TTS_MODEL'], "this is a test", language, tts_speed)
+    model.generate("this is a test", speaker=None, lang=language, cps=tts_speed)
 
     app.run(host=host, port=port)
 
