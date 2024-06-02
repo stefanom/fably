@@ -18,8 +18,6 @@ def speech_handler():
 
     text = data['input']
 
-    print(text)
-
     language = app.config['LANGUAGE']
     model = app.config['TTS_MODEL']
     speed = app.config['TTS_SPEED']

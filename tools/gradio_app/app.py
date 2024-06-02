@@ -1,4 +1,3 @@
-import io
 import gradio as gr
 import openai
 import soundfile as sf

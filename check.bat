@@ -8,4 +8,4 @@ if %errorlevel% neq 0 (
 )
 
 echo Running pylint...
-pylint fably tools\*.py
+pylint fably tools/*.py servers/stt_server/*.py servers/tts_server/*.py 
