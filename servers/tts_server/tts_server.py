@@ -42,7 +42,12 @@ def status_handler():
 @click.option('--tts_model', default='tiny', help='WhisperSpeech model to use (e.g., tiny, base, small, hq-fast).')
 @click.option('--tts_speed', default=15, help='Characters per second to speak.')
 def main(host, port, language, tts_model, tts_speed):
-    model = Pipeline(s2a_ref=f"whisperspeech/whisperspeech:s2a-q4-{tts_model}-en+pl.model", torch_compile=True)
+
+    model = Pipeline(
+        t2s_ref=f"whisperspeech/whisperspeech:t2s-{tts_model}-en+pl.model",
+        s2a_ref=f"whisperspeech/whisperspeech:s2a-q4-{tts_model}-en+pl.model",
+        torch_compile=True
+    )
 
     app.config['LANGUAGE'] = language
     app.config['TTS_MODEL'] = model
