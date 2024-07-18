@@ -8,8 +8,7 @@ import logging
 import shutil
 import time
 import threading
-
-import openai
+from ai import OpenAIClient
 
 try:
     from gpiozero import Button
@@ -25,16 +24,7 @@ def generate_story(ctx, query, prompt):
     about the models used to generate the story to a file.
     """
 
-    return ctx.llm_client.chat.completions.create(
-        stream=True,
-        model=ctx.llm_model,
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": query},
-        ],
-        temperature=ctx.temperature,
-        max_tokens=ctx.max_tokens,
-    )
+    return ctx.ai.chat(query, prompt)
 
 
 async def synthesize_audio(ctx, story_path, index, text=None):
@@ -59,17 +49,7 @@ async def synthesize_audio(ctx, story_path, index, text=None):
         else:
             raise ValueError(f"No text found for paragraph {index} in {story_path}")
 
-    response = await ctx.tts_client.audio.speech.create(
-        input=text,
-        model=ctx.tts_model,
-        voice=ctx.tts_voice,
-        response_format=ctx.tts_format,
-    )
-
-    logging.debug("Saving audio for paragraph %i...", index)
-    response.write_to_file(audio_file_path)
-    logging.debug("Paragraph %i audio saved at %s", index, audio_file_path)
-
+    await ctx.ai.speech(text, audio_file_path, index)
     return audio_file_path
 
 
@@ -93,11 +73,9 @@ async def writer(ctx, story_queue, query=None):
         voice_query, query_sample_rate, query_local = utils.record_until_silence(
             ctx.recognizer, ctx.trim_first_frame
         )
-        query, voice_query_file = utils.transcribe(
-            ctx.stt_client,
+        query, voice_query_file = await utils.transcribe(
+            ctx.ai,
             voice_query,
-            ctx.stt_model,
-            ctx.language,
             query_sample_rate,
             ctx.queries_path,
         )
@@ -138,16 +116,14 @@ async def writer(ctx, story_queue, query=None):
         prompt = utils.read_from_file(ctx.prompt_file)
 
         logging.debug("Creating story...")
-        story_stream = await generate_story(ctx, query, prompt)
+        story_stream = generate_story(ctx, query, prompt)
 
         index = 0
         paragraph = []
 
         logging.debug("Iterating over the story stream to capture paragraphs...")
         async for chunk in story_stream:
-            fragment = chunk.choices[0].delta.content
-            if fragment is None:
-                break
+            fragment = chunk
 
             paragraph.append(fragment)
 
@@ -247,9 +223,7 @@ def main(ctx, query=None):
     The main Fably loop.
     """
 
-    ctx.stt_client = openai.Client(base_url=ctx.stt_url, api_key=ctx.api_key, )
-    ctx.llm_client = openai.AsyncClient(base_url=ctx.llm_url, api_key=ctx.api_key)
-    ctx.tts_client = openai.AsyncClient(base_url=ctx.tts_url, api_key=ctx.api_key)
+    ctx.ai = OpenAIClient(ctx)
 
     # If a query is not present, introduce ourselves
     if not query:

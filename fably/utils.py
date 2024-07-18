@@ -248,11 +248,9 @@ def record_until_silence(
     return np.concatenate(npframes, axis=0), sample_rate, " ".join(query)
 
 
-def transcribe(
-    stt_client,
+async def transcribe(
+    ai,
     audio_data,
-    stt_model="whisper-1",
-    language="en",
     sample_rate=QUERY_SAMPLE_RATE,
     audio_path=None,
 ):
@@ -273,10 +271,5 @@ def transcribe(
     write_audio_data_to_file(audio_data, audio_file, sample_rate)
 
     logging.debug("Sending voice query for transcription...")
-
-    with open(audio_file, "rb") as query:
-        response = stt_client.audio.transcriptions.create(
-            model=stt_model, language=language, file=query
-        )
-
-    return response.text, audio_file
+    text = await ai.transcriptions(audio_file)
+    return text, audio_file

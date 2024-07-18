@@ -30,6 +30,7 @@ class Context:
         self.tts_url = None
         self.tts_model = None
         self.tts_voice = None
+        self.ai = None
         self.running = True
 
     def persist_runtime_params(self, output_file, **kwargs):
